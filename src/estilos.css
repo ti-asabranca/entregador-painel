@@ -275,3 +275,13 @@ a { color: var(--azul); }
 .filtro-filiais-lista .opcao { display: flex; gap: 8px; align-items: center; cursor: pointer; font-size: 0.9rem; }
 .etiqueta.vermelha { background: #fdecea; color: var(--vermelho); }
 .etiqueta.amarela { background: #fff4d6; color: #8a5a00; }
+
+/* Retirar carga da viagem */
+.retirar-carga {
+  margin-left: 6px; border: 1px solid transparent; background: none; color: var(--secundario); cursor: pointer;
+  border-radius: 4px; padding: 0 5px; font-size: 0.8rem; line-height: 1.4;
+}
+.retirar-carga:hover { color: var(--vermelho); border-color: var(--vermelho); background: #fdecea; }
+.modal.modal-largo { max-width: 900px; }
+.tabela-entregas .dados-rodape { margin-top: 3px; }
+.tabela-entregas .dados-rodape .selo { font-size: 0.72rem; padding: 2px 8px; }

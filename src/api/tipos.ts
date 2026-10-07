@@ -15,6 +15,23 @@ export interface Gestor {
   perfil?: Perfil;
 }
 
+/** Carga retirada da viagem pela gerência (pode ser devolvida). */
+export interface CargaRetirada {
+  filial: string;
+  codigo: string;
+  seqcar: string;
+  data: string;
+  motorista: string | null;
+  motorista_nome: string | null;
+  caminhao: string | null;
+  caminhao_placa: string | null;
+  rota_descricao: string | null;
+  notas: number;
+  retirada_em: string | null;
+  retirada_por: string | null;
+  retirada_motivo: string | null;
+}
+
 /** Filial conhecida (cargas do ERP e depósitos). */
 export interface Filial {
   empresa: string;

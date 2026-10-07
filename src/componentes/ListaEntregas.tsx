@@ -8,6 +8,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import type { ClienteLista, MotoristaPainel, SituacaoCliente } from '../api/tipos';
 import { formatarDataHora, formatarDecorrido, formatarDistancia, formatarHora } from '../util/formatacao';
 import { SITUACAO, SITUACAO_CLIENTE, rotuloMotivo, rotuloRota, veiculosDoMotorista } from '../util/rotulos';
+import { useAuth } from '../auth/AuthContext';
+import { retirarCarga } from './CargasRetiradas';
 import { SeloSituacao } from './Selo';
 
 const ORDEM_ROTA = {
@@ -63,8 +65,9 @@ function alertaConexao(ultima: string | null): string | null {
   return min > ALERTA_CONEXAO_MIN ? `Sem conexão ${formatarDecorrido(ultima)} (${formatarDataHora(ultima)})` : null;
 }
 
-function LinhaMotorista({ m: bruto }: { m: MotoristaPainel }) {
+function LinhaMotorista({ m: bruto, aoAlterar }: { m: MotoristaPainel; aoAlterar: () => void }) {
   const navegar = useNavigate();
+  const { token, escopo } = useAuth();
   // Tolera a API anterior (sem a lista de clientes) enquanto o servidor não for atualizado.
   const m: MotoristaPainel = {
     ...bruto,
@@ -77,15 +80,11 @@ function LinhaMotorista({ m: bruto }: { m: MotoristaPainel }) {
   const concluidos = m.clientes_total - m.clientes_pendentes;
   const pct = m.clientes_total ? Math.round((concluidos / m.clientes_total) * 100) : 0;
   const pesoEntregue = m.peso_total === null ? null : Math.max(0, m.peso_total - m.peso_restante);
-  // Caminhão: no cliente em atendimento; senão, logo após o último atendido na sequência.
+  // Caminhão: no cliente em atendimento; senão, antes do próximo cliente pendente.
   const noCliente = m.visita
     ? m.clientes.findIndex((c) => c.codigo === m.visita!.cliente_codigo && c.loja === m.visita!.cliente_loja)
     : -1;
-  const posCaminhao = noCliente >= 0
-    ? noCliente
-    : ideal
-      ? m.clientes.map((c) => c.situacao !== 'PENDENTE').lastIndexOf(true) + 1
-      : m.clientes.findIndex((c) => c.situacao === 'PENDENTE');
+  const posCaminhao = noCliente >= 0 ? noCliente : m.clientes.findIndex((c) => c.situacao === 'PENDENTE');
   const conexao = alertaConexao(m.ultima_conexao);
   const abrir = () => navegar(`/motoristas/${m.codigo}`);
 
@@ -93,20 +92,13 @@ function LinhaMotorista({ m: bruto }: { m: MotoristaPainel }) {
     <tr className="linha-entrega" onClick={abrir}>
       <td className="col-dados">
         <div className="dados-topo">
-          <SeloSituacao situacao={m.situacao} />
           <Link to={`/motoristas/${m.codigo}`} onClick={(e) => e.stopPropagation()} className="nome-motorista">
             {m.nome}
           </Link>
           <span className="secundario">{m.codigo}</span>
         </div>
         <div className="secundario veiculo" title={veiculosDoMotorista(m)}>{veiculosDoMotorista(m)}</div>
-        {(conexao || m.pausa || m.visita) && (
-          <div className="dados-alerta">
-            {conexao && <span className="alerta-conexao">{conexao}</span>}
-            {m.pausa && <span>{rotuloMotivo(m.pausa.motivo)} desde {formatarHora(m.pausa.desde)}</span>}
-            {m.visita && <span>No cliente {m.visita.cliente_nome ?? m.visita.cliente_codigo}</span>}
-          </div>
-        )}
+        {conexao && <div className="dados-alerta"><span className="alerta-conexao">{conexao}</span></div>}
         <div className="contadores">
           <Contador situacao="NAO_ENTREGUE" valor={m.clientes_nao_entregues} />
           <Contador situacao="PARCIAL" valor={m.clientes_parciais} />
@@ -121,6 +113,11 @@ function LinhaMotorista({ m: bruto }: { m: MotoristaPainel }) {
             {m.peso_restante_incompleto ? '*' : ''}
           </span>
         </div>
+        <div className="dados-rodape">
+          <SeloSituacao situacao={m.situacao} />
+          {m.pausa && <span className="secundario">{rotuloMotivo(m.pausa.motivo)} desde {formatarHora(m.pausa.desde)}</span>}
+          {m.visita && <span className="secundario">No cliente {m.visita.cliente_nome ?? m.visita.cliente_codigo}</span>}
+        </div>
       </td>
       <td className="col-carga">
         {m.cargas.map((c) => (
@@ -128,6 +125,12 @@ function LinhaMotorista({ m: bruto }: { m: MotoristaPainel }) {
             <strong>Nº {c.codigo}/{c.seqcar}</strong>
             <span className="secundario"> · {c.data.split('-').reverse().slice(0, 2).join('/')}</span>
             {rotuloRota(c) && <span className="rota-carga"> · {rotuloRota(c)}</span>}
+            <button type="button" className="retirar-carga" title="Retirar esta carga da viagem (não aparece mais no aplicativo)"
+              aria-label={`Retirar a carga ${c.codigo}/${c.seqcar} da viagem`}
+              onClick={(e) => {
+                e.stopPropagation();
+                void retirarCarga(c, m.nome, token, escopo).then((ok) => { if (ok) aoAlterar(); });
+              }}>✕</button>
           </div>
         ))}
         <div className="secundario linha-rotas" title="Melhor rota: menor distância (OSRM) da posição atual pelos clientes pendentes">
@@ -164,7 +167,7 @@ function LinhaMotorista({ m: bruto }: { m: MotoristaPainel }) {
   );
 }
 
-export function ListaEntregas({ motoristas }: { motoristas: MotoristaPainel[] }) {
+export function ListaEntregas({ motoristas, aoAlterar }: { motoristas: MotoristaPainel[]; aoAlterar: () => void }) {
   return (
     <div className="tabela-rolagem">
       <table className="tabela tabela-entregas">
@@ -176,7 +179,7 @@ export function ListaEntregas({ motoristas }: { motoristas: MotoristaPainel[] })
           </tr>
         </thead>
         <tbody>
-          {motoristas.map((m) => <LinhaMotorista key={m.codigo} m={m} />)}
+          {motoristas.map((m) => <LinhaMotorista key={m.codigo} m={m} aoAlterar={aoAlterar} />)}
         </tbody>
       </table>
       <div className="legenda-lista secundario">

@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Painel, Situacao } from '../api/tipos';
 import { useAuth } from '../auth/AuthContext';
+import { CargasRetiradas } from '../componentes/CargasRetiradas';
 import { ListaEntregas } from '../componentes/ListaEntregas';
 import { SeloSituacao } from '../componentes/Selo';
 import { useConsulta } from '../hooks/useConsulta';
@@ -27,7 +28,8 @@ function lerVisao(): Visao {
 
 export function EntregadoresPagina() {
   const { escopo } = useAuth();
-  const { dados, erro, carregando } = useConsulta<Painel>(`/gestao/painel?${escopo}`, INTERVALO_MS);
+  const { dados, erro, carregando, atualizar } = useConsulta<Painel>(`/gestao/painel?${escopo}`, INTERVALO_MS);
+  const [verRetiradas, setVerRetiradas] = useState(false);
   const [filtro, setFiltro] = useState<Situacao | 'TODOS'>('TODOS');
   const [busca, setBusca] = useState('');
   const [visao, setVisao] = useState<Visao>(lerVisao);
@@ -59,6 +61,9 @@ export function EntregadoresPagina() {
             <span><strong>{dados.resumo.clientes_pendentes}</strong> clientes pendentes</span>
             <span><strong>{formatarPeso(dados.resumo.peso_restante)}</strong> a entregar</span>
             <span className="secundario">Atualizado às {formatarHora(dados.atualizado_em)}{carregando ? '…' : ''}</span>
+            <button type="button" className="botao secundario-botao" onClick={() => setVerRetiradas(true)}>
+              Cargas retiradas
+            </button>
           </div>
         )}
       </div>
@@ -83,7 +88,8 @@ export function EntregadoresPagina() {
       {erro && <div className="aviso erro">{erro}</div>}
       {dados && lista.length === 0 && <div className="aviso">Nenhum motorista com viagem em andamento neste filtro.</div>}
 
-      {visao === 'lista' && lista.length > 0 && <ListaEntregas motoristas={lista} />}
+      {visao === 'lista' && lista.length > 0 && <ListaEntregas motoristas={lista} aoAlterar={atualizar} />}
+      {verRetiradas && <CargasRetiradas aoFechar={() => setVerRetiradas(false)} aoAlterar={atualizar} />}
 
       {visao === 'cartoes' && <div className="grade-motoristas">
         {lista.map((m) => {

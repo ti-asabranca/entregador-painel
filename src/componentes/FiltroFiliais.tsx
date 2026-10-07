@@ -31,15 +31,16 @@ export function FiltroFiliais() {
     filiaisFiltro.includes(filial) ? filiaisFiltro.filter((f) => f !== filial) : [...filiaisFiltro, filial],
   );
   const resumo = filiaisFiltro.length === 0
-    ? (filiaisPermitidas ? `Minhas filiais (${filiaisPermitidas.join(', ')})` : 'Todas as filiais')
-    : `Filial ${filiaisFiltro.join(', ')}`;
+    ? (filiaisPermitidas ? 'Minhas filiais' : 'Todas as filiais')
+    : `${filiaisFiltro.length > 1 ? 'Filiais' : 'Filial'} ${filiaisFiltro.join(', ')}`;
+  const detalhe = filiaisPermitidas ? ` Liberadas: ${filiaisPermitidas.join(', ')}.` : '';
 
   return (
     <div className="filtro-filiais" ref={caixa}>
       <button type="button" className={`filtro-filiais-botao${filiaisFiltro.length ? ' ativo' : ''}`}
         onClick={() => setAberto((a) => !a)} aria-expanded={aberto} aria-haspopup="listbox"
-        title="Filtrar as telas por filial (vale para mapa, entregadores, ocorrências e motoristas)">
-        <span className="rotulo-filtro">Filiais:</span> {resumo} ▾
+        title={`Filtrar as telas por filial (mapa, entregadores, alertas, ocorrências e análises).${detalhe}`}>
+        {resumo} ▾
       </button>
       {aberto && (
         <div className="filtro-filiais-lista" role="listbox" aria-multiselectable="true">

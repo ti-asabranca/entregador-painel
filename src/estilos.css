@@ -222,7 +222,9 @@ a { color: var(--azul); }
 .etiqueta.verde { background: #e3f6e4; color: #1b5e20; }
 .etiqueta.cinza { background: #eceff1; color: #455a64; }
 .linha-inativa td { opacity: 0.6; }
-.acoes { white-space: nowrap; display: flex; gap: 12px; }
+/* A célula continua célula de tabela (alinhamento e borda da linha); o flex fica no contêiner interno. */
+.acoes { white-space: nowrap; }
+.acoes-botoes { display: flex; gap: 12px; }
 .modal-fundo { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); z-index: 3000; display: flex; align-items: center; justify-content: center; padding: 16px; }
 .modal {
   background: #fff; border-radius: var(--raio); padding: 22px; width: 100%; max-width: 480px; max-height: 90vh;
@@ -285,3 +287,16 @@ a { color: var(--azul); }
 .modal.modal-largo { max-width: 900px; }
 .tabela-entregas .dados-rodape { margin-top: 3px; }
 .tabela-entregas .dados-rodape .selo { font-size: 0.72rem; padding: 2px 8px; }
+
+/* Desfazer retirada de carga */
+.contador-retiradas {
+  display: inline-block; margin-left: 6px; min-width: 20px; padding: 0 6px; border-radius: 999px;
+  background: var(--vermelho); color: #fff; font-size: 0.75rem; font-weight: 700; text-align: center;
+}
+.aviso-desfazer {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 2600;
+  display: flex; align-items: center; gap: 14px; background: #263238; color: #fff; padding: 10px 12px 10px 18px;
+  border-radius: 10px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); max-width: calc(100vw - 32px);
+}
+.aviso-desfazer .botao { padding: 6px 14px; background: #ffca28; color: #3e2723; font-weight: 700; }
+.aviso-desfazer .fechar { background: none; border: 0; color: #fff; font-size: 1.3rem; cursor: pointer; }

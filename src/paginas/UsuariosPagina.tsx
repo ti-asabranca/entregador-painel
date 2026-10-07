@@ -249,6 +249,7 @@ export function UsuariosPagina() {
                     {u.atualizado_em && <div>alterado {formatarDataHora(u.atualizado_em)} por {u.atualizado_por}</div>}
                   </td>
                   <td className="acoes">
+                    <div className="acoes-botoes">
                     <button type="button" className="botao-link" onClick={() => {
                       setMensagem(null);
                       setEditando({
@@ -257,6 +258,7 @@ export function UsuariosPagina() {
                       });
                     }}>Editar</button>
                     <button type="button" className="botao-link" onClick={() => void redefinir(u)}>Redefinir senha</button>
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -5,7 +5,7 @@
  * cliente atendido depois de pendentes anteriores indica desvio —, com barra de progresso e percentual).
  */
 import { Link, useNavigate } from 'react-router-dom';
-import type { ClienteLista, MotoristaPainel, SituacaoCliente } from '../api/tipos';
+import type { CargaResumo, ClienteLista, MotoristaPainel, SituacaoCliente } from '../api/tipos';
 import { formatarDataHora, formatarDecorrido, formatarDistancia, formatarHora } from '../util/formatacao';
 import { SITUACAO, SITUACAO_CLIENTE, rotuloMotivo, rotuloRota, veiculosDoMotorista } from '../util/rotulos';
 import { useAuth } from '../auth/AuthContext';
@@ -65,7 +65,17 @@ function alertaConexao(ultima: string | null): string | null {
   return min > ALERTA_CONEXAO_MIN ? `Sem conexão ${formatarDecorrido(ultima)} (${formatarDataHora(ultima)})` : null;
 }
 
-function LinhaMotorista({ m: bruto, aoAlterar }: { m: MotoristaPainel; aoAlterar: () => void }) {
+/** Carga retirada agora (para oferecer "Desfazer"). */
+export interface CargaRetiradaAgora {
+  carga: CargaResumo;
+  motorista: string;
+}
+
+function LinhaMotorista({ m: bruto, aoAlterar, aoRetirar }: {
+  m: MotoristaPainel;
+  aoAlterar: () => void;
+  aoRetirar: (r: CargaRetiradaAgora) => void;
+}) {
   const navegar = useNavigate();
   const { token, escopo } = useAuth();
   // Tolera a API anterior (sem a lista de clientes) enquanto o servidor não for atualizado.
@@ -129,7 +139,11 @@ function LinhaMotorista({ m: bruto, aoAlterar }: { m: MotoristaPainel; aoAlterar
               aria-label={`Retirar a carga ${c.codigo}/${c.seqcar} da viagem`}
               onClick={(e) => {
                 e.stopPropagation();
-                void retirarCarga(c, m.nome, token, escopo).then((ok) => { if (ok) aoAlterar(); });
+                void retirarCarga(c, m.nome, token, escopo).then((ok) => {
+                  if (!ok) return;
+                  aoRetirar({ carga: c, motorista: m.nome });
+                  aoAlterar();
+                });
               }}>✕</button>
           </div>
         ))}
@@ -167,7 +181,11 @@ function LinhaMotorista({ m: bruto, aoAlterar }: { m: MotoristaPainel; aoAlterar
   );
 }
 
-export function ListaEntregas({ motoristas, aoAlterar }: { motoristas: MotoristaPainel[]; aoAlterar: () => void }) {
+export function ListaEntregas({ motoristas, aoAlterar, aoRetirar }: {
+  motoristas: MotoristaPainel[];
+  aoAlterar: () => void;
+  aoRetirar: (r: CargaRetiradaAgora) => void;
+}) {
   return (
     <div className="tabela-rolagem">
       <table className="tabela tabela-entregas">
@@ -179,7 +197,7 @@ export function ListaEntregas({ motoristas, aoAlterar }: { motoristas: Motorista
           </tr>
         </thead>
         <tbody>
-          {motoristas.map((m) => <LinhaMotorista key={m.codigo} m={m} aoAlterar={aoAlterar} />)}
+          {motoristas.map((m) => <LinhaMotorista key={m.codigo} m={m} aoAlterar={aoAlterar} aoRetirar={aoRetirar} />)}
         </tbody>
       </table>
       <div className="legenda-lista secundario">

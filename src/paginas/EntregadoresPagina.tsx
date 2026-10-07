@@ -2,12 +2,14 @@
  * Funcionalidade 2 (visão geral): todos os motoristas com viagem em andamento — situação, caminhão, peso de saída
  * e restante, progresso dos clientes. Clicar abre o detalhe com rotas e clientes na ordem da melhor rota.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Painel, Situacao } from '../api/tipos';
 import { useAuth } from '../auth/AuthContext';
-import { CargasRetiradas } from '../componentes/CargasRetiradas';
-import { ListaEntregas } from '../componentes/ListaEntregas';
+import { ErroApi } from '../api/cliente';
+import type { CargaRetirada } from '../api/tipos';
+import { CargasRetiradas, devolverCarga } from '../componentes/CargasRetiradas';
+import { ListaEntregas, type CargaRetiradaAgora } from '../componentes/ListaEntregas';
 import { SeloSituacao } from '../componentes/Selo';
 import { useConsulta } from '../hooks/useConsulta';
 import { formatarDecorrido, formatarHora, formatarPeso, percentualEntregue } from '../util/formatacao';
@@ -30,6 +32,35 @@ export function EntregadoresPagina() {
   const { escopo } = useAuth();
   const { dados, erro, carregando, atualizar } = useConsulta<Painel>(`/gestao/painel?${escopo}`, INTERVALO_MS);
   const [verRetiradas, setVerRetiradas] = useState(false);
+  const { token } = useAuth();
+  const retiradas = useConsulta<{ cargas: CargaRetirada[] }>(`/gestao/cargas/retiradas?${escopo}`, 5 * 60000);
+  const [desfazer, setDesfazer] = useState<CargaRetiradaAgora | null>(null);
+  const [devolvendo, setDevolvendo] = useState(false);
+  const atualizarTudo = () => {
+    atualizar();
+    retiradas.atualizar();
+  };
+
+  // O aviso com "Desfazer" some sozinho depois de 20 s.
+  useEffect(() => {
+    if (!desfazer) return undefined;
+    const id = setTimeout(() => setDesfazer(null), 20000);
+    return () => clearTimeout(id);
+  }, [desfazer]);
+
+  async function desfazerRetirada() {
+    if (!desfazer) return;
+    setDevolvendo(true);
+    try {
+      await devolverCarga(desfazer.carga, token, escopo);
+      setDesfazer(null);
+      atualizarTudo();
+    } catch (err) {
+      window.alert(err instanceof ErroApi ? err.message : 'Não foi possível devolver a carga.');
+    } finally {
+      setDevolvendo(false);
+    }
+  }
   const [filtro, setFiltro] = useState<Situacao | 'TODOS'>('TODOS');
   const [busca, setBusca] = useState('');
   const [visao, setVisao] = useState<Visao>(lerVisao);
@@ -61,8 +92,12 @@ export function EntregadoresPagina() {
             <span><strong>{dados.resumo.clientes_pendentes}</strong> clientes pendentes</span>
             <span><strong>{formatarPeso(dados.resumo.peso_restante)}</strong> a entregar</span>
             <span className="secundario">Atualizado às {formatarHora(dados.atualizado_em)}{carregando ? '…' : ''}</span>
-            <button type="button" className="botao secundario-botao" onClick={() => setVerRetiradas(true)}>
+            <button type="button" className="botao secundario-botao" onClick={() => setVerRetiradas(true)}
+              title="Cargas tiradas da viagem pela gerência — devolva as que foram retiradas por engano">
               Cargas retiradas
+              {(retiradas.dados?.cargas.length ?? 0) > 0 && (
+                <span className="contador-retiradas">{retiradas.dados!.cargas.length}</span>
+              )}
             </button>
           </div>
         )}
@@ -88,8 +123,21 @@ export function EntregadoresPagina() {
       {erro && <div className="aviso erro">{erro}</div>}
       {dados && lista.length === 0 && <div className="aviso">Nenhum motorista com viagem em andamento neste filtro.</div>}
 
-      {visao === 'lista' && lista.length > 0 && <ListaEntregas motoristas={lista} aoAlterar={atualizar} />}
-      {verRetiradas && <CargasRetiradas aoFechar={() => setVerRetiradas(false)} aoAlterar={atualizar} />}
+      {visao === 'lista' && lista.length > 0 && (
+        <ListaEntregas motoristas={lista} aoAlterar={atualizarTudo} aoRetirar={setDesfazer} />
+      )}
+      {verRetiradas && <CargasRetiradas aoFechar={() => setVerRetiradas(false)} aoAlterar={atualizarTudo} />}
+      {desfazer && (
+        <div className="aviso-desfazer" role="status" aria-live="polite">
+          <span>
+            Carga <strong>{desfazer.carga.codigo}/{desfazer.carga.seqcar}</strong> retirada da viagem de {desfazer.motorista}.
+          </span>
+          <button type="button" className="botao" onClick={() => void desfazerRetirada()} disabled={devolvendo}>
+            {devolvendo ? 'Devolvendo…' : 'Desfazer'}
+          </button>
+          <button type="button" className="fechar" aria-label="Fechar aviso" onClick={() => setDesfazer(null)}>×</button>
+        </div>
+      )}
 
       {visao === 'cartoes' && <div className="grade-motoristas">
         {lista.map((m) => {

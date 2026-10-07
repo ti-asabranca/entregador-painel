@@ -18,7 +18,8 @@ export async function retirarCarga(
 ): Promise<boolean> {
   const motivo = window.prompt(
     `Retirar a carga ${carga.codigo}/${carga.seqcar} (${carga.data.split('-').reverse().join('/')}) da viagem de ${motorista}?\n\n`
-    + 'Ela deixa de aparecer no aplicativo do motorista, no painel e nas rotas (pode ser devolvida depois em "Cargas retiradas").\n\n'
+    + 'Ela deixa de aparecer no aplicativo do motorista, no painel e nas rotas. Se for engano, use "Desfazer" no aviso '
+    + 'que aparece em seguida ou "Cargas retiradas" > "Devolver à viagem".\n\n'
     + 'Motivo (opcional):',
     'Carga sem prestação de contas, não está mais no caminhão',
   );
@@ -34,6 +35,17 @@ export async function retirarCarga(
   }
 }
 
+/** Devolve a carga retirada à viagem do motorista. Lança ErroApi em caso de falha. */
+export async function devolverCarga(
+  carga: { filial: string; codigo: string; seqcar: string },
+  token: string | null,
+  escopo: string,
+): Promise<void> {
+  await requisitar(`/gestao/cargas/devolver?${escopo}`, {
+    metodo: 'POST', token, corpo: { filial: carga.filial, carga_codigo: carga.codigo, seqcar: carga.seqcar },
+  });
+}
+
 export function CargasRetiradas({ aoFechar, aoAlterar }: { aoFechar: () => void; aoAlterar: () => void }) {
   const { escopo, token } = useAuth();
   const { dados, erro, atualizar } = useConsulta<{ cargas: CargaRetirada[] }>(`/gestao/cargas/retiradas?${escopo}`, 5 * 60000);
@@ -41,9 +53,7 @@ export function CargasRetiradas({ aoFechar, aoAlterar }: { aoFechar: () => void;
   async function devolver(c: CargaRetirada) {
     if (!window.confirm(`Devolver a carga ${c.codigo}/${c.seqcar} à viagem de ${c.motorista_nome ?? c.motorista}? Ela volta a aparecer no aplicativo.`)) return;
     try {
-      await requisitar(`/gestao/cargas/devolver?${escopo}`, {
-        metodo: 'POST', token, corpo: { filial: c.filial, carga_codigo: c.codigo, seqcar: c.seqcar },
-      });
+      await devolverCarga(c, token, escopo);
       atualizar();
       aoAlterar();
     } catch (err) {

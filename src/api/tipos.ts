@@ -140,6 +140,10 @@ export interface Motorista {
   clientes_nao_entregues: number;
   clientes_parciais: number;
   clientes_pendentes: number;
+  /** Média de permanência por cliente usada na previsão (motorista, empresa ou padrão). */
+  tempo_medio_cliente_s?: number | null;
+  /** Previsão de término da viagem (rota restante + tempo médio por cliente pendente). */
+  previsao_termino_em?: string | null;
 }
 
 /** Cliente na lista do painel: concluídos primeiro, depois pendentes na ordem da rota. */
@@ -150,6 +154,8 @@ export interface ClienteLista {
   municipio: string | null;
   situacao: SituacaoCliente;
   ordem: number | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 /** Motorista no painel (lista e mapa). */

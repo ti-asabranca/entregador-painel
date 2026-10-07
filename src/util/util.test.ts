@@ -56,3 +56,16 @@ describe('caminhão (DA3) e rota (DA8)', async () => {
     expect(rotuloRota({})).toBeNull();
   });
 });
+
+describe('csv', () => {
+  it('escapa aspas e neutraliza fórmulas do Excel', async () => {
+    const { celula, numeroCsv } = await import('./csv');
+    expect(celula('a"b')).toBe('"a""b"');
+    expect(celula('=SOMA(A1)')).toBe(`"'=SOMA(A1)"`);
+    expect(celula('-1+2')).toBe(`"'-1+2"`);
+    expect(celula(numeroCsv(-9.6512))).toBe('"-9,6512"');
+    expect(celula(null)).toBe('""');
+    expect(numeroCsv(-9.6512)).toBe('-9,6512');
+    expect(numeroCsv(null)).toBe('');
+  });
+});

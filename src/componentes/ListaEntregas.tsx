@@ -153,6 +153,11 @@ function LinhaMotorista({ m: bruto, aoAlterar, aoRetirar, abrirResumo }: {
         <div className="secundario linha-rotas" title="Melhor rota: menor distância (OSRM) da posição atual pelos clientes pendentes">
           Melhor rota {formatarDistancia(m.melhor_rota_m)}
           {m.rota_vigente && <> · Motorista {formatarDistancia(m.rota_vigente.distancia_m)}</>}
+          {m.previsao_termino_em && (
+            <span title="Previsão: melhor rota restante + tempo médio por cliente pendente">
+              {' '}· Término previsto {formatarHora(m.previsao_termino_em)}
+            </span>
+          )}
         </div>
       </td>
       <td className="col-situacao">

@@ -21,15 +21,17 @@ function Enquadrar({ pontos, chave }: { pontos: [number, number][]; chave: strin
   return null;
 }
 
-export function MapaBase({ pontos, chaveEnquadramento, children, className }: {
+export function MapaBase({ pontos, chaveEnquadramento, children, className, canvas = false }: {
   pontos: [number, number][];
   /** Muda quando o enquadramento deve ser refeito (ex.: outro motorista selecionado). */
   chaveEnquadramento: string;
   children?: ReactNode;
   className?: string;
+  /** Desenha vetores em canvas (milhares de pontos/linhas sem pesar o navegador). */
+  canvas?: boolean;
 }) {
   return (
-    <MapContainer center={CENTRO_PADRAO} zoom={11} className={className ?? 'mapa'} scrollWheelZoom>
+    <MapContainer center={CENTRO_PADRAO} zoom={11} className={className ?? 'mapa'} scrollWheelZoom preferCanvas={canvas}>
       <TileLayer url={TILES} attribution={ATRIBUICAO} maxZoom={19} />
       <Enquadrar pontos={pontos} chave={chaveEnquadramento} />
       {children}

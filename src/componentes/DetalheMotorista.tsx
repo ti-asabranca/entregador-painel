@@ -14,6 +14,7 @@ import {
 } from '../util/formatacao';
 import { decodificarPolyline } from '../util/polyline';
 import { SITUACAO_CLIENTE, rotuloMotivo, rotuloRota, veiculosDoMotorista } from '../util/rotulos';
+import { LinhaDoTempo } from './LinhaDoTempo';
 import { MapaBase } from './MapaBase';
 import { iconeCliente, iconeDeposito, iconeMotorista } from './marcadores';
 import { MarcaCliente, SeloSituacao } from './Selo';
@@ -101,6 +102,13 @@ export function DetalheMotorista({ codigo, compacto = false }: { codigo: string;
           <strong>{formatarDistancia(d.melhor_rota?.distancia_m)}</strong>
           <span className="secundario">{formatarDuracao(d.melhor_rota?.duracao_s)}</span>
         </div>
+        {d.clientes_pendentes > 0 && (
+          <div className="numero" title="Melhor rota restante + tempo médio por cliente pendente (últimos 30 dias)">
+            <span className="rotulo">Término previsto</span>
+            <strong>{formatarHora(d.previsao_termino_em)}</strong>
+            <span className="secundario">média {formatarDuracao(d.tempo_medio_cliente_s)}/cliente</span>
+          </div>
+        )}
       </section>
       {pct !== null && (
         <div className="barra" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}
@@ -181,6 +189,8 @@ export function DetalheMotorista({ codigo, compacto = false }: { codigo: string;
           <p className="secundario">* Peso parcial: há itens sem B1_PESBRU ou notas sem itens sincronizados.</p>
         )}
       </section>
+
+      {!compacto && <LinhaDoTempo codigo={d.codigo} />}
 
       <footer className="detalhe-rodape">
         <span className="secundario">

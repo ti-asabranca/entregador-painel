@@ -1,5 +1,6 @@
 /** Rótulos e cores das situações e motivos (códigos da entregador-api). */
 import type { CargaResumo, Motorista, Situacao, SituacaoCliente, TipoOcorrencia, Veiculo } from '../api/tipos';
+import type { TipoAlerta } from '../api/tiposAnalise';
 
 export const SITUACAO: Record<Situacao, { rotulo: string; cor: string; descricao: string }> = {
   ENTREGANDO: { rotulo: 'Entregando', cor: '#1565c0', descricao: 'No cliente (chegada detectada)' },
@@ -21,6 +22,15 @@ export const SITUACAO_CLIENTE: Record<SituacaoCliente, { rotulo: string; cor: st
 export const TIPO_OCORRENCIA: Record<TipoOcorrencia, string> = {
   NOTA_NAO_ENTREGUE: 'Nota não entregue',
   ITEM_DEVOLVIDO: 'Item devolvido',
+};
+
+export const TIPO_ALERTA: Record<TipoAlerta, string> = {
+  SEM_SINAL: 'Sem sinal',
+  PARADO: 'Parado sem pausa',
+  CLIENTE_DEMORADO: 'Tempo excessivo no cliente',
+  FORA_SEQUENCIA: 'Fora da sequência',
+  DIRECAO_CONTINUA: 'Direção contínua',
+  ATRASO: 'Atraso previsto',
 };
 
 const MOTIVOS: Record<string, string> = {

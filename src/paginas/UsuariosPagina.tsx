@@ -5,7 +5,7 @@
  */
 import { useState, type FormEvent } from 'react';
 import { ErroApi, requisitar } from '../api/cliente';
-import type { Perfil, SenhaTemporaria, Usuario } from '../api/tipos';
+import type { Filial, Perfil, SenhaTemporaria, Usuario } from '../api/tipos';
 import { useAuth } from '../auth/AuthContext';
 import { useConsulta } from '../hooks/useConsulta';
 import { formatarDataHora } from '../util/formatacao';
@@ -22,10 +22,12 @@ interface Formulario {
   nome: string;
   perfil: Perfil;
   empresas: string[];
+  /** 'EMPRESA|FILIAL'; empresa sem nenhuma = todas as filiais dela. */
+  filiais: string[];
   ativo: boolean;
 }
 
-const vazio: Formulario = { id: null, login: '', nome: '', perfil: 'USUARIO', empresas: ['01', '08'], ativo: true };
+const vazio: Formulario = { id: null, login: '', nome: '', perfil: 'USUARIO', empresas: ['01', '08'], filiais: [], ativo: true };
 
 /** Exibe a senha temporária uma única vez, com cópia. */
 function DialogoSenha({ senha, aoFechar }: { senha: SenhaTemporaria; aoFechar: () => void }) {
@@ -52,8 +54,9 @@ function DialogoSenha({ senha, aoFechar }: { senha: SenhaTemporaria; aoFechar: (
   );
 }
 
-function FormularioUsuario({ inicial, aoSalvar, aoCancelar }: {
+function FormularioUsuario({ inicial, filiaisConhecidas, aoSalvar, aoCancelar }: {
   inicial: Formulario;
+  filiaisConhecidas: Filial[];
   aoSalvar: (f: Formulario) => Promise<void>;
   aoCancelar: () => void;
 }) {
@@ -82,7 +85,15 @@ function FormularioUsuario({ inicial, aoSalvar, aoCancelar }: {
   const alternarEmpresa = (codigo: string) => setF((x) => ({
     ...x,
     empresas: x.empresas.includes(codigo) ? x.empresas.filter((e) => e !== codigo) : [...x.empresas, codigo].sort(),
+    // Empresa desmarcada leva junto as filiais dela.
+    filiais: x.empresas.includes(codigo) ? x.filiais.filter((fl) => !fl.startsWith(`${codigo}|`)) : x.filiais,
   }));
+  const todasDaEmpresa = (codigo: string) => !f.filiais.some((fl) => fl.startsWith(`${codigo}|`));
+  const alternarFilial = (chave: string) => setF((x) => ({
+    ...x,
+    filiais: x.filiais.includes(chave) ? x.filiais.filter((fl) => fl !== chave) : [...x.filiais, chave].sort(),
+  }));
+  const marcarTodas = (codigo: string) => setF((x) => ({ ...x, filiais: x.filiais.filter((fl) => !fl.startsWith(`${codigo}|`)) }));
 
   return (
     <div className="modal-fundo" role="dialog" aria-modal="true" aria-labelledby="titulo-usuario">
@@ -122,6 +133,28 @@ function FormularioUsuario({ inicial, aoSalvar, aoCancelar }: {
             </label>
           ))}
         </fieldset>
+        {f.empresas.map((codigo) => {
+          const lista = filiaisConhecidas.filter((x) => x.empresa === codigo);
+          return (
+            <fieldset key={codigo}>
+              <legend>Filiais da empresa {codigo}</legend>
+              <label className="opcao">
+                <input type="checkbox" checked={todasDaEmpresa(codigo)} onChange={() => marcarTodas(codigo)} />
+                Todas as filiais <span className="secundario">(inclusive as novas)</span>
+              </label>
+              {lista.map((x) => {
+                const chave = `${x.empresa}|${x.filial}`;
+                return (
+                  <label key={chave} className="opcao">
+                    <input type="checkbox" checked={f.filiais.includes(chave)} onChange={() => alternarFilial(chave)} />
+                    {x.filial}{x.nome ? ` - ${x.nome}` : ''}
+                  </label>
+                );
+              })}
+              {lista.length === 0 && <span className="secundario">Nenhuma filial com cargas ainda.</span>}
+            </fieldset>
+          );
+        })}
         {!novo && (
           <label className="opcao">
             <input type="checkbox" checked={f.ativo} onChange={(e) => setF({ ...f, ativo: e.target.checked })} />
@@ -142,6 +175,7 @@ function FormularioUsuario({ inicial, aoSalvar, aoCancelar }: {
 export function UsuariosPagina() {
   const { token, gestor } = useAuth();
   const { dados, erro, atualizar } = useConsulta<{ usuarios: Usuario[] }>('/gestao/usuarios', 5 * 60000);
+  const { dados: filiais } = useConsulta<{ filiais: Filial[] }>('/gestao/filiais', 10 * 60000);
   const [editando, setEditando] = useState<Formulario | null>(null);
   const [senha, setSenha] = useState<SenhaTemporaria | null>(null);
   const [mensagem, setMensagem] = useState<string | null>(null);
@@ -149,12 +183,12 @@ export function UsuariosPagina() {
   async function salvar(f: Formulario) {
     if (f.id === null) {
       const r = await requisitar<SenhaTemporaria>('/gestao/usuarios', {
-        metodo: 'POST', token, corpo: { login: f.login.trim(), nome: f.nome, perfil: f.perfil, empresas: f.empresas },
+        metodo: 'POST', token, corpo: { login: f.login.trim(), nome: f.nome, perfil: f.perfil, empresas: f.empresas, filiais: f.filiais },
       });
       setSenha(r);
     } else {
       await requisitar(`/gestao/usuarios/${f.id}`, {
-        metodo: 'PUT', token, corpo: { nome: f.nome, perfil: f.perfil, empresas: f.empresas, ativo: f.ativo },
+        metodo: 'PUT', token, corpo: { nome: f.nome, perfil: f.perfil, empresas: f.empresas, filiais: f.filiais, ativo: f.ativo },
       });
       setMensagem(`Usuário ${f.login} atualizado.`);
     }
@@ -191,14 +225,19 @@ export function UsuariosPagina() {
         <div className="tabela-rolagem">
           <table className="tabela">
             <thead>
-              <tr><th>Usuário</th><th>Perfil</th><th>Empresas</th><th>Situação</th><th>Último acesso</th><th>Cadastro</th><th /></tr>
+              <tr><th>Usuário</th><th>Perfil</th><th>Empresas / filiais</th><th>Situação</th><th>Último acesso</th><th>Cadastro</th><th /></tr>
             </thead>
             <tbody>
               {dados.usuarios.map((u) => (
                 <tr key={u.id} className={u.ativo ? undefined : 'linha-inativa'}>
                   <td><strong>{u.nome}</strong><div className="secundario">{u.login}{u.login === gestor?.login ? ' (você)' : ''}</div></td>
                   <td>{PERFIS[u.perfil]}</td>
-                  <td>{u.empresas.join(', ')}</td>
+                  <td>
+                    {u.empresas.map((e) => {
+                      const fs = (u.filiais ?? []).filter((x) => x.startsWith(`${e}|`)).map((x) => x.slice(3));
+                      return <div key={e}>{e}: {fs.length ? `filiais ${fs.join(', ')}` : 'todas as filiais'}</div>;
+                    })}
+                  </td>
                   <td>
                     <span className={`etiqueta ${u.ativo ? 'verde' : 'cinza'}`}>{u.ativo ? 'Ativo' : 'Inativo'}</span>
                     {u.troca_senha_pendente && <div className="secundario">aguardando troca de senha</div>}
@@ -212,7 +251,10 @@ export function UsuariosPagina() {
                   <td className="acoes">
                     <button type="button" className="botao-link" onClick={() => {
                       setMensagem(null);
-                      setEditando({ id: u.id, login: u.login, nome: u.nome, perfil: u.perfil, empresas: u.empresas, ativo: u.ativo });
+                      setEditando({
+                        id: u.id, login: u.login, nome: u.nome, perfil: u.perfil, empresas: u.empresas,
+                        filiais: u.filiais ?? [], ativo: u.ativo,
+                      });
                     }}>Editar</button>
                     <button type="button" className="botao-link" onClick={() => void redefinir(u)}>Redefinir senha</button>
                   </td>
@@ -223,7 +265,10 @@ export function UsuariosPagina() {
         </div>
       )}
 
-      {editando && <FormularioUsuario inicial={editando} aoSalvar={salvar} aoCancelar={() => setEditando(null)} />}
+      {editando && (
+        <FormularioUsuario inicial={editando} filiaisConhecidas={filiais?.filiais ?? []} aoSalvar={salvar}
+          aoCancelar={() => setEditando(null)} />
+      )}
       {senha && <DialogoSenha senha={senha} aoFechar={() => setSenha(null)} />}
     </main>
   );

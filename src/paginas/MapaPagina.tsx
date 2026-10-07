@@ -16,8 +16,8 @@ import { ORDEM_SITUACOES, SITUACAO } from '../util/rotulos';
 const INTERVALO_MS = 30000;
 
 export function MapaPagina() {
-  const { empresa } = useAuth();
-  const { dados, erro } = useConsulta<Painel>(`/gestao/painel?empresa=${empresa}`, INTERVALO_MS);
+  const { empresa, escopo } = useAuth();
+  const { dados, erro } = useConsulta<Painel>(`/gestao/painel?${escopo}`, INTERVALO_MS);
   const [selecionado, setSelecionado] = useState<string | null>(null);
 
   const comPosicao = useMemo(() => (dados?.motoristas ?? []).filter((m) => m.posicao), [dados]);

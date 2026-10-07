@@ -8,6 +8,7 @@ import { MotoristaPagina } from './paginas/MotoristaPagina';
 import { OcorrenciasPagina } from './paginas/OcorrenciasPagina';
 import { TrocarSenhaPagina } from './paginas/TrocarSenhaPagina';
 import { UsuariosPagina } from './paginas/UsuariosPagina';
+import { CadastroMotoristasPagina } from './paginas/CadastroMotoristasPagina';
 
 export function App() {
   const { token, trocaSenha, ehAdministrador } = useAuth();
@@ -20,6 +21,7 @@ export function App() {
         <Route path="/entregadores" element={<EntregadoresPagina />} />
         <Route path="/motoristas/:codigo" element={<MotoristaPagina />} />
         <Route path="/ocorrencias" element={<OcorrenciasPagina />} />
+        <Route path="/cadastro/motoristas" element={<CadastroMotoristasPagina />} />
         {/* A API também recusa (403) quem não é administrador. */}
         {ehAdministrador && <Route path="/usuarios" element={<UsuariosPagina />} />}
         <Route path="*" element={<Navigate to="/mapa" replace />} />

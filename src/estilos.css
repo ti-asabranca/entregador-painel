@@ -239,3 +239,39 @@ a { color: var(--azul); }
 /* Caminhão (DA3) e rota de entrega (DA8) */
 .veiculo { font-weight: 600; color: var(--texto); }
 .rota-carga { font-weight: 600; font-size: 0.85rem; color: var(--azul); text-transform: uppercase; }
+
+/* Lista compacta (linha mais baixa) */
+.tabela-entregas td { padding: 6px 10px; }
+.tabela-entregas .col-dados { width: 360px; }
+.tabela-entregas .col-carga { width: 300px; text-align: left; font-size: 0.84rem; line-height: 1.35; }
+.tabela-entregas .dados-topo { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.tabela-entregas .dados-topo .selo { font-size: 0.72rem; padding: 2px 8px; }
+.tabela-entregas .nome-motorista { font-size: 0.92rem; }
+.tabela-entregas .veiculo { font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 340px; }
+.tabela-entregas .contadores { margin: 3px 0 0; gap: 8px; }
+.tabela-entregas .contador { font-size: 0.76rem; }
+.dados-alerta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.78rem; color: var(--secundario); }
+.alerta-conexao { color: #b26a00; font-weight: 600; }
+.linha-carga { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.linha-carga .rota-carga { display: inline; font-size: 0.8rem; }
+.linha-rotas { white-space: nowrap; }
+.tabela-entregas .icones-clientes { gap: 1px 2px; }
+.ordem-aviso.desvio { color: var(--vermelho); font-weight: 700; font-size: 0.74rem; }
+
+/* Filtro de filiais (barra superior) */
+.filtro-filiais { position: relative; }
+.filtro-filiais-botao {
+  background: rgba(255, 255, 255, 0.15); color: #fff; border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 0.9rem; max-width: 320px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.filtro-filiais-botao.ativo { background: #ffca28; color: #3e2723; border-color: #ffca28; font-weight: 700; }
+.filtro-filiais-botao .rotulo-filtro { opacity: 0.85; }
+.filtro-filiais-lista {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 2500; background: #fff; color: var(--texto);
+  border-radius: 8px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); padding: 10px 12px; min-width: 240px;
+  max-height: 60vh; overflow: auto; display: flex; flex-direction: column; gap: 6px;
+}
+.filtro-filiais-lista .opcao { display: flex; gap: 8px; align-items: center; cursor: pointer; font-size: 0.9rem; }
+.etiqueta.vermelha { background: #fdecea; color: var(--vermelho); }
+.etiqueta.amarela { background: #fff4d6; color: #8a5a00; }

@@ -26,8 +26,8 @@ function lerVisao(): Visao {
 }
 
 export function EntregadoresPagina() {
-  const { empresa } = useAuth();
-  const { dados, erro, carregando } = useConsulta<Painel>(`/gestao/painel?empresa=${empresa}`, INTERVALO_MS);
+  const { escopo } = useAuth();
+  const { dados, erro, carregando } = useConsulta<Painel>(`/gestao/painel?${escopo}`, INTERVALO_MS);
   const [filtro, setFiltro] = useState<Situacao | 'TODOS'>('TODOS');
   const [busca, setBusca] = useState('');
   const [visao, setVisao] = useState<Visao>(lerVisao);

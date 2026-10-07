@@ -8,6 +8,7 @@ import type { Gestor, RespostaLogin } from '../api/tipos';
 
 const CHAVE_SESSAO = 'gestao.sessao';
 const CHAVE_EMPRESA = 'gestao.empresa';
+const CHAVE_FILIAIS = 'gestao.filiais_filtro';
 
 interface SessaoGuardada {
   token: string;
@@ -23,6 +24,13 @@ interface Contexto {
   trocaSenha: boolean;
   empresa: string;
   definirEmpresa: (e: string) => void;
+  /** Filiais liberadas ao usuário na empresa atual; null = todas. */
+  filiaisPermitidas: string[] | null;
+  /** Filtro de filiais da sessão (vazio = todas as liberadas). */
+  filiaisFiltro: string[];
+  definirFiliaisFiltro: (f: string[]) => void;
+  /** Parâmetros das consultas: "empresa=01&filiais=00,02". */
+  escopo: string;
   entrar: (login: string, senha: string) => Promise<void>;
   trocarSenha: (atual: string, nova: string) => Promise<void>;
   sair: () => Promise<void>;
@@ -55,6 +63,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return localStorage.getItem(CHAVE_EMPRESA) || '';
     } catch {
       return '';
+    }
+  });
+
+  const [filtros, setFiltros] = useState<Record<string, string[]>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(CHAVE_FILIAIS) || '{}') as Record<string, string[]>;
+    } catch {
+      return {};
     }
   });
 
@@ -114,6 +130,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const empresas = sessao?.gestor.empresas ?? [];
   const empresaValida = empresas.includes(empresa) ? empresa : (empresas[0] ?? '');
 
+  // Filiais: permissão do usuário na empresa e filtro da sessão (guardado por usuário/empresa no navegador).
+  const filiaisPermitidas = useMemo(() => {
+    const da = (sessao?.gestor.filiais ?? []).filter((f) => f.startsWith(`${empresaValida}|`)).map((f) => f.slice(3));
+    return da.length ? da : null;
+  }, [sessao, empresaValida]);
+  const chaveFiltro = `${sessao?.gestor.login}|${empresaValida}`;
+  const filiaisFiltro = useMemo(() => {
+    const salvo = filtros[chaveFiltro] ?? [];
+    // Permissão reduzida pelo administrador: descarta filiais que deixaram de ser liberadas.
+    return filiaisPermitidas ? salvo.filter((f) => filiaisPermitidas.includes(f)) : salvo;
+  }, [filtros, chaveFiltro, filiaisPermitidas]);
+  const definirFiliaisFiltro = useCallback((f: string[]) => {
+    setFiltros((atual) => {
+      const novo = { ...atual, [chaveFiltro]: [...new Set(f)].sort() };
+      try {
+        localStorage.setItem(CHAVE_FILIAIS, JSON.stringify(novo));
+      } catch {
+        // preferência só nesta aba
+      }
+      return novo;
+    });
+  }, [chaveFiltro]);
+  const escopo = `empresa=${encodeURIComponent(empresaValida)}${
+    filiaisFiltro.length ? `&filiais=${encodeURIComponent(filiaisFiltro.join(','))}` : ''}`;
+
   const valor = useMemo<Contexto>(() => ({
     token: sessao?.token ?? null,
     gestor: sessao?.gestor ?? null,
@@ -121,10 +162,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     trocaSenha: sessao?.trocaSenha ?? false,
     empresa: empresaValida,
     definirEmpresa,
+    filiaisPermitidas,
+    filiaisFiltro,
+    definirFiliaisFiltro,
+    escopo,
     entrar,
     trocarSenha,
     sair,
-  }), [sessao, empresaValida, definirEmpresa, entrar, trocarSenha, sair]);
+  }), [sessao, empresaValida, definirEmpresa, filiaisPermitidas, filiaisFiltro, definirFiliaisFiltro, escopo,
+    entrar, trocarSenha, sair]);
 
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>;
 }

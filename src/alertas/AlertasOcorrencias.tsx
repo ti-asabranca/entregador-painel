@@ -65,13 +65,14 @@ interface Aviso {
 }
 
 export function AlertasProvider({ children }: { children: ReactNode }) {
-  const { gestor, empresa } = useAuth();
+  const { gestor, empresa, escopo } = useAuth();
   const navegar = useNavigate();
   const { dados, erro, carregando } = useConsulta<RespostaOcorrencias>(
-    empresa ? `/gestao/ocorrencias?empresa=${empresa}` : null,
+    empresa ? `/gestao/ocorrencias?${escopo}` : null,
     INTERVALO_MS,
   );
-  const chaveArmazenamento = `gestao.ocorrencias_vistas|${gestor?.login}|${empresa}`;
+  // Por usuário e escopo (empresa + filtro de filiais): ampliar o filtro não dispara alerta das antigas.
+  const chaveArmazenamento = `gestao.ocorrencias_vistas|${gestor?.login}|${escopo}`;
   const vistas = useRef<Set<string> | null>(null);
   const [novas, setNovas] = useState<Set<string>>(new Set());
   const [avisos, setAvisos] = useState<Aviso[]>([]);

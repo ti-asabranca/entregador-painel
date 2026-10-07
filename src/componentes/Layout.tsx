@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { AlertasProvider, useAlertas } from '../alertas/AlertasOcorrencias';
 import { useAuth } from '../auth/AuthContext';
+import { FiltroFiliais } from './FiltroFiliais';
 
 const NOMES_EMPRESAS: Record<string, string> = { '01': 'Asa Branca', '08': 'Rota Distribuidora' };
 
@@ -18,6 +19,7 @@ function BarraTopo() {
           Ocorrências
           {novas.size > 0 && <span className="contador-alerta" aria-label={`${novas.size} novas`}>{novas.size}</span>}
         </NavLink>
+        <NavLink to="/cadastro/motoristas">Motoristas</NavLink>
         {ehAdministrador && <NavLink to="/usuarios">Usuários</NavLink>}
       </nav>
       <div className="usuario">
@@ -27,6 +29,7 @@ function BarraTopo() {
             Ativar notificações
           </button>
         )}
+        <FiltroFiliais />
         {gestor && gestor.empresas.length > 1 ? (
           <select value={empresa} onChange={(e) => definirEmpresa(e.target.value)} aria-label="Empresa">
             {gestor.empresas.map((e) => <option key={e} value={e}>{e} - {NOMES_EMPRESAS[e] ?? `Empresa ${e}`}</option>)}

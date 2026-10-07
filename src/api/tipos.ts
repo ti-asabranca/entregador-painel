@@ -9,8 +9,35 @@ export interface Gestor {
   login: string;
   nome: string;
   empresas: string[];
+  /** Filiais liberadas 'EMPRESA|FILIAL'; empresa sem nenhuma na lista = todas. Ausente = todas. */
+  filiais?: string[];
   /** Ausente em sessões antigas (antes dos perfis): tratado como USUARIO. */
   perfil?: Perfil;
+}
+
+/** Filial conhecida (cargas do ERP e depósitos). */
+export interface Filial {
+  empresa: string;
+  filial: string;
+  nome: string | null;
+}
+
+/** Motorista no cadastro (vem do ERP; o painel só reseta a senha). */
+export interface Entregador {
+  codigo: string;
+  nome: string;
+  cpf: string | null;
+  cpf_valido: boolean;
+  deletado: boolean;
+  sem_senha: boolean;
+  senha_padrao: boolean;
+  bloqueado: boolean;
+  sessoes_ativas: number;
+  ultimo_login_em: string | null;
+  senha_alterada_em: string | null;
+  senha_resetada_em: string | null;
+  senha_resetada_por: string | null;
+  ultima_carga: string | null;
 }
 
 /** Usuário da gerência (tela de administração). */
@@ -20,6 +47,7 @@ export interface Usuario {
   nome: string;
   perfil: Perfil;
   empresas: string[];
+  filiais: string[];
   ativo: boolean;
   troca_senha_pendente: boolean;
   bloqueado: boolean;
@@ -109,8 +137,14 @@ export interface ClienteLista {
 
 /** Motorista no painel (lista e mapa). */
 export interface MotoristaPainel extends Motorista {
-  /** Ordem dos pendentes: melhor rota (calculada pela API), rota vigente do motorista ou sequência do ERP. */
-  ordem_rota: 'MELHOR' | 'VIGENTE' | 'ERP';
+  /**
+   * Ordem dos clientes: IDEAL = rota ideal da viagem (do depósito por todos os clientes, inclusive atendidos);
+   * VIGENTE = rota do motorista (ideal em cálculo); ERP = sequência do ERP. MELHOR = API anterior.
+   */
+  ordem_rota: 'IDEAL' | 'MELHOR' | 'VIGENTE' | 'ERP';
+  /** Pendentes que ficaram para trás na rota ideal (null = sem rota ideal). */
+  fora_sequencia?: number | null;
+  rota_ideal_m?: number | null;
   melhor_rota_m: number | null;
   melhor_rota_s: number | null;
   rota_vigente: { origem: string; criterio: string; distancia_m: number | null; duracao_s: number | null } | null;

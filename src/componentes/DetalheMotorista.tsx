@@ -21,9 +21,9 @@ import { MarcaCliente, SeloSituacao } from './Selo';
 const INTERVALO_MS = 60000;
 
 export function DetalheMotorista({ codigo, compacto = false }: { codigo: string; compacto?: boolean }) {
-  const { empresa } = useAuth();
+  const { escopo } = useAuth();
   const { dados: d, erro, carregando, atualizar } = useConsulta<Detalhe>(
-    `/gestao/motoristas/${encodeURIComponent(codigo)}?empresa=${empresa}`,
+    `/gestao/motoristas/${encodeURIComponent(codigo)}?${escopo}`,
     INTERVALO_MS,
   );
 

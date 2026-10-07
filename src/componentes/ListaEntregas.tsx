@@ -4,12 +4,14 @@
  * rota · situação da entrega (um ícone por cliente, colorido pela situação, na ordem da ROTA IDEAL da viagem —
  * cliente atendido depois de pendentes anteriores indica desvio —, com barra de progresso e percentual).
  */
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { CargaResumo, ClienteLista, MotoristaPainel, SituacaoCliente } from '../api/tipos';
 import { formatarDataHora, formatarDecorrido, formatarDistancia, formatarHora } from '../util/formatacao';
 import { SITUACAO, SITUACAO_CLIENTE, rotuloMotivo, rotuloRota, veiculosDoMotorista } from '../util/rotulos';
 import { useAuth } from '../auth/AuthContext';
 import { retirarCarga } from './CargasRetiradas';
+import { ResumoPopup, type AlvoResumo } from './ResumoPopup';
 import { SeloSituacao } from './Selo';
 
 const ORDEM_ROTA = {
@@ -71,10 +73,11 @@ export interface CargaRetiradaAgora {
   motorista: string;
 }
 
-function LinhaMotorista({ m: bruto, aoAlterar, aoRetirar }: {
+function LinhaMotorista({ m: bruto, aoAlterar, aoRetirar, abrirResumo }: {
   m: MotoristaPainel;
   aoAlterar: () => void;
   aoRetirar: (r: CargaRetiradaAgora) => void;
+  abrirResumo: (a: AlvoResumo) => void;
 }) {
   const navegar = useNavigate();
   const { token, escopo } = useAuth();
@@ -157,13 +160,24 @@ function LinhaMotorista({ m: bruto, aoAlterar, aoRetirar }: {
         <div className="icones-clientes" title={ORDEM_ROTA[m.ordem_rota]}>
           {m.clientes.map((c, i) => (
             <span key={`${c.codigo}|${c.loja}`} className="icone-pessoa">
-              {i === posCaminhao && m.situacao !== 'SEM_SINAL' && <IconeCaminhao cor={SITUACAO[m.situacao].cor} />}
-              <IconePessoa cor={SITUACAO_CLIENTE[c.situacao].cor} titulo={tituloCliente(c, ideal)} />
+              {i === posCaminhao && m.situacao !== 'SEM_SINAL' && (
+                <button type="button" className="icone-botao" aria-label={`Resumo do caminhão de ${m.nome}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    abrirResumo({ tipo: 'caminhao', motorista: m.codigo, motoristaNome: m.nome, x: e.clientX, y: e.clientY });
+                  }}>
+                  <IconeCaminhao cor={SITUACAO[m.situacao].cor} />
+                </button>
+              )}
+              <button type="button" className="icone-botao" aria-label={`Resumo: ${tituloCliente(c, ideal)}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  abrirResumo({ tipo: 'cliente', motorista: m.codigo, cliente: c.codigo, loja: c.loja, x: e.clientX, y: e.clientY });
+                }}>
+                <IconePessoa cor={SITUACAO_CLIENTE[c.situacao].cor} titulo={tituloCliente(c, ideal)} />
+              </button>
             </span>
           ))}
-          {posCaminhao === m.clientes.length && m.clientes.length > 0 && m.situacao !== 'SEM_SINAL' && (
-            <IconeCaminhao cor={SITUACAO[m.situacao].cor} />
-          )}
           {m.clientes.length === 0 && <span className="secundario">Sem clientes</span>}
         </div>
         <span className={`percentual${pct === 100 ? ' completo' : ''}`}>{pct}%</span>
@@ -186,6 +200,7 @@ export function ListaEntregas({ motoristas, aoAlterar, aoRetirar }: {
   aoAlterar: () => void;
   aoRetirar: (r: CargaRetiradaAgora) => void;
 }) {
+  const [resumo, setResumo] = useState<AlvoResumo | null>(null);
   return (
     <div className="tabela-rolagem">
       <table className="tabela tabela-entregas">
@@ -197,14 +212,17 @@ export function ListaEntregas({ motoristas, aoAlterar, aoRetirar }: {
           </tr>
         </thead>
         <tbody>
-          {motoristas.map((m) => <LinhaMotorista key={m.codigo} m={m} aoAlterar={aoAlterar} aoRetirar={aoRetirar} />)}
+          {motoristas.map((m) => (
+            <LinhaMotorista key={m.codigo} m={m} aoAlterar={aoAlterar} aoRetirar={aoRetirar} abrirResumo={setResumo} />
+          ))}
         </tbody>
       </table>
+      {resumo && <ResumoPopup alvo={resumo} aoFechar={() => setResumo(null)} />}
       <div className="legenda-lista secundario">
         {(['ENTREGUE', 'PARCIAL', 'NAO_ENTREGUE', 'PENDENTE'] as SituacaoCliente[]).map((s) => (
           <span key={s}><IconePessoa cor={SITUACAO_CLIENTE[s].cor} titulo={SITUACAO_CLIENTE[s].rotulo} /> {SITUACAO_CLIENTE[s].rotulo}</span>
         ))}
-        <span>Ícones na ordem da rota ideal: cinza antes de verde/vermelho = cliente pulado.</span>
+        <span>Ícones na ordem da rota ideal: cinza antes de verde/vermelho = cliente pulado. Clique no cliente ou no caminhão para ver o resumo.</span>
         <span>Percentual = clientes concluídos (entregues, parciais ou não entregues) sobre o total.</span>
         <span>* Peso parcial: há itens sem B1_PESBRU.</span>
       </div>

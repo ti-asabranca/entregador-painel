@@ -300,3 +300,22 @@ a { color: var(--azul); }
 }
 .aviso-desfazer .botao { padding: 6px 14px; background: #ffca28; color: #3e2723; font-weight: 700; }
 .aviso-desfazer .fechar { background: none; border: 0; color: #fff; font-size: 1.3rem; cursor: pointer; }
+
+/* Resumo do cliente/caminhão (popup da lista) */
+.icone-botao { background: none; border: 0; padding: 0; margin: 0; cursor: pointer; line-height: 0; border-radius: 50%; }
+.icone-botao:hover, .icone-botao:focus-visible { outline: 2px solid var(--azul); outline-offset: 1px; }
+.resumo-popup {
+  position: fixed; z-index: 2700; width: 340px; max-width: calc(100vw - 16px); background: #fff; color: var(--texto);
+  border-radius: 10px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25); padding: 14px 16px; cursor: default;
+  font-size: 0.88rem;
+}
+.resumo-popup h3 { margin: 0 24px 2px 0; font-size: 1rem; }
+.resumo-popup .fechar { position: absolute; top: 6px; right: 8px; border: 0; background: none; font-size: 1.3rem; cursor: pointer; }
+.resumo-endereco { margin: 4px 0; }
+.resumo-tags { display: flex; gap: 6px; margin: 6px 0; flex-wrap: wrap; }
+.resumo-tags .selo { font-size: 0.74rem; padding: 2px 8px; }
+.resumo-motivo { color: var(--vermelho); margin-bottom: 4px; }
+.resumo-bloco { border-top: 1px solid var(--borda); margin-top: 8px; padding-top: 6px; }
+.resumo-linha { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; }
+.resumo-linha span { color: var(--secundario); }
+.resumo-linha strong { text-align: right; font-weight: 600; }

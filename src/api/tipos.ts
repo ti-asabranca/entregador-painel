@@ -50,6 +50,18 @@ export interface CargaResumo {
   hora: string | null;
   peso: number | null;
   caminhao: string | null;
+  /** Cadastro do caminhão (DA3) e rota de entrega (DA8) — ausentes se o ERP não enviar. */
+  caminhao_placa?: string | null;
+  caminhao_descricao?: string | null;
+  rota_codigo?: string | null;
+  rota_descricao?: string | null;
+}
+
+/** Veículo da viagem: código (DAK_CAMINH), placa e descrição (DA3). */
+export interface Veiculo {
+  codigo: string | null;
+  placa: string | null;
+  descricao: string | null;
 }
 
 export interface Posicao {
@@ -65,6 +77,8 @@ export interface Motorista {
   nome: string;
   situacao: Situacao;
   caminhoes: string[];
+  /** Ausente em versões anteriores da API (usar caminhoes). */
+  veiculos?: Veiculo[];
   cargas: CargaResumo[];
   peso_total: number | null;
   peso_restante: number;
@@ -180,6 +194,8 @@ export interface Ocorrencia {
   carga_codigo: string;
   seqcar: string;
   caminhao: string | null;
+  caminhao_placa?: string | null;
+  rota_descricao?: string | null;
   cliente_codigo: string;
   cliente_loja: string;
   cliente_nome: string | null;

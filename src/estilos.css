@@ -235,3 +235,7 @@ a { color: var(--azul); }
 .modal-acoes { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
 .senha-temporaria { display: flex; align-items: center; gap: 12px; }
 .senha-temporaria code { font-size: 1.3rem; background: var(--fundo); padding: 8px 12px; border-radius: 8px; letter-spacing: 0.04em; user-select: all; }
+
+/* Caminhão (DA3) e rota de entrega (DA8) */
+.veiculo { font-weight: 600; color: var(--texto); }
+.rota-carga { font-weight: 600; font-size: 0.85rem; color: var(--azul); text-transform: uppercase; }

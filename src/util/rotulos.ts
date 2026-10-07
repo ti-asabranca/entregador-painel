@@ -1,5 +1,5 @@
 /** Rótulos e cores das situações e motivos (códigos da entregador-api). */
-import type { Situacao, SituacaoCliente, TipoOcorrencia } from '../api/tipos';
+import type { CargaResumo, Motorista, Situacao, SituacaoCliente, TipoOcorrencia, Veiculo } from '../api/tipos';
 
 export const SITUACAO: Record<Situacao, { rotulo: string; cor: string; descricao: string }> = {
   ENTREGANDO: { rotulo: 'Entregando', cor: '#1565c0', descricao: 'No cliente (chegada detectada)' },
@@ -45,3 +45,28 @@ const MOTIVOS: Record<string, string> = {
 
 export const rotuloMotivo = (codigo: string | null | undefined): string =>
   codigo ? (MOTIVOS[codigo] ?? codigo) : '—';
+
+/** "RGZ3F75 - 000417 - M.BENZ ATEGO 1419/48" (placa, código e descrição; só o que houver). */
+export const rotuloVeiculo = (v: Veiculo): string =>
+  [v.placa, v.codigo, v.descricao].filter(Boolean).join(' - ');
+
+/** Veículos do motorista (com cadastro DA3 quando a API enviar; senão, só o código DAK_CAMINH). */
+export function veiculosDoMotorista(m: Pick<Motorista, 'caminhoes' | 'veiculos'>): string {
+  const lista = m.veiculos?.length ? m.veiculos.map(rotuloVeiculo) : m.caminhoes;
+  return lista.join(', ') || 'Veículo não informado';
+}
+
+/** Rota de entrega da carga (DA8): "MACEIO - LIT (000123)". */
+export function rotuloRota(c: Pick<CargaResumo, 'rota_codigo' | 'rota_descricao'>): string | null {
+  if (!c.rota_descricao && !c.rota_codigo) return null;
+  return c.rota_descricao ? `${c.rota_descricao}${c.rota_codigo ? ` (${c.rota_codigo})` : ''}` : `Rota ${c.rota_codigo}`;
+}
+
+/** Texto para busca: códigos e placas dos caminhões, descrições e rotas. */
+export function textoBuscaVeiculoRota(m: Pick<Motorista, 'caminhoes' | 'veiculos' | 'cargas'>): string {
+  return [
+    ...m.caminhoes,
+    ...(m.veiculos ?? []).flatMap((v) => [v.placa, v.descricao]),
+    ...m.cargas.flatMap((c) => [c.rota_codigo, c.rota_descricao]),
+  ].filter(Boolean).join(' ').toLowerCase();
+}

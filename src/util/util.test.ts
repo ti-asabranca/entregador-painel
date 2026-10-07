@@ -40,3 +40,19 @@ describe('formatação', () => {
     expect(rotuloMotivo(null)).toBe('—');
   });
 });
+
+describe('caminhão (DA3) e rota (DA8)', async () => {
+  const { rotuloRota, rotuloVeiculo, veiculosDoMotorista } = await import('./rotulos');
+
+  it('veículo com placa, código e descrição; sem cadastro usa o código', () => {
+    expect(rotuloVeiculo({ placa: 'RGZ3F75', codigo: '000417', descricao: 'M.BENZ ATEGO' })).toBe('RGZ3F75 - 000417 - M.BENZ ATEGO');
+    expect(veiculosDoMotorista({ caminhoes: ['000417'], veiculos: [] })).toBe('000417');
+    expect(veiculosDoMotorista({ caminhoes: [] })).toBe('Veículo não informado');
+  });
+
+  it('rota com descrição e código; só código; nenhuma', () => {
+    expect(rotuloRota({ rota_codigo: '000123', rota_descricao: 'MACEIO - LIT' })).toBe('MACEIO - LIT (000123)');
+    expect(rotuloRota({ rota_codigo: '000123', rota_descricao: null })).toBe('Rota 000123');
+    expect(rotuloRota({})).toBeNull();
+  });
+});

@@ -139,7 +139,10 @@ export function OcorrenciasPagina() {
                   </td>
                   <td>
                     {o.motorista ? <Link to={`/motoristas/${o.motorista}`}>{o.motorista_nome ?? o.motorista}</Link> : '—'}
-                    <div className="secundario">Carga {o.carga_codigo}/{o.seqcar}{o.caminhao ? ` · ${o.caminhao}` : ''}</div>
+                    <div className="secundario">
+                      Carga {o.carga_codigo}/{o.seqcar}{o.caminhao_placa ? ` · ${o.caminhao_placa}` : o.caminhao ? ` · ${o.caminhao}` : ''}
+                    </div>
+                    {o.rota_descricao && <div className="secundario">Rota {o.rota_descricao}</div>}
                   </td>
                 </tr>
               ))}

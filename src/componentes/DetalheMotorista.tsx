@@ -13,7 +13,7 @@ import {
   formatarDecorrido, formatarDistancia, formatarDuracao, formatarHora, formatarPeso, percentualEntregue,
 } from '../util/formatacao';
 import { decodificarPolyline } from '../util/polyline';
-import { SITUACAO_CLIENTE, rotuloMotivo } from '../util/rotulos';
+import { SITUACAO_CLIENTE, rotuloMotivo, rotuloRota, veiculosDoMotorista } from '../util/rotulos';
 import { MapaBase } from './MapaBase';
 import { iconeCliente, iconeDeposito, iconeMotorista } from './marcadores';
 import { MarcaCliente, SeloSituacao } from './Selo';
@@ -49,7 +49,7 @@ export function DetalheMotorista({ codigo, compacto = false }: { codigo: string;
         <div>
           <h2>{d.nome}</h2>
           <div className="secundario">
-            Código {d.codigo} · {d.caminhoes.length ? `Veículo ${d.caminhoes.join(', ')}` : 'Veículo não informado'}
+            Motorista {d.codigo} · Caminhão {veiculosDoMotorista(d)}
           </div>
         </div>
         <SeloSituacao situacao={d.situacao} />
@@ -183,7 +183,9 @@ export function DetalheMotorista({ codigo, compacto = false }: { codigo: string;
       </section>
 
       <footer className="detalhe-rodape">
-        <span className="secundario">Cargas: {d.cargas.map((c) => `${c.codigo}/${c.seqcar}`).join(', ')}</span>
+        <span className="secundario">
+          Cargas: {d.cargas.map((c) => `${c.codigo}/${c.seqcar}${rotuloRota(c) ? ` — ${rotuloRota(c)}` : ''}`).join(', ')}
+        </span>
         <span>
           <button type="button" className="botao-link" onClick={atualizar} disabled={carregando}>
             {carregando ? 'Atualizando…' : 'Atualizar'}

@@ -10,7 +10,7 @@ import { ListaEntregas } from '../componentes/ListaEntregas';
 import { SeloSituacao } from '../componentes/Selo';
 import { useConsulta } from '../hooks/useConsulta';
 import { formatarDecorrido, formatarHora, formatarPeso, percentualEntregue } from '../util/formatacao';
-import { ORDEM_SITUACOES, SITUACAO, rotuloMotivo } from '../util/rotulos';
+import { ORDEM_SITUACOES, SITUACAO, rotuloMotivo, rotuloRota, textoBuscaVeiculoRota, veiculosDoMotorista } from '../util/rotulos';
 
 const INTERVALO_MS = 30000;
 const CHAVE_VISAO = 'gestao.visao_entregadores';
@@ -46,7 +46,7 @@ export function EntregadoresPagina() {
     return (dados?.motoristas ?? [])
       .filter((m) => filtro === 'TODOS' || m.situacao === filtro)
       .filter((m) => !termo || m.nome.toLowerCase().includes(termo) || m.codigo.includes(termo)
-        || m.caminhoes.some((c) => c.toLowerCase().includes(termo)));
+        || textoBuscaVeiculoRota(m).includes(termo));
   }, [dados, filtro, busca]);
 
   return (
@@ -64,7 +64,7 @@ export function EntregadoresPagina() {
       </div>
 
       <div className="filtros">
-        <input type="search" placeholder="Buscar motorista, código ou placa" value={busca}
+        <input type="search" placeholder="Buscar motorista, código, placa ou rota" value={busca}
           onChange={(e) => setBusca(e.target.value)} aria-label="Buscar" />
         <div className="alternar-visao" role="group" aria-label="Forma de exibição">
           <button type="button" className={visao === 'lista' ? 'ativo' : ''} onClick={() => trocarVisao('lista')}>Lista</button>
@@ -93,7 +93,10 @@ export function EntregadoresPagina() {
               <div className="cartao-topo">
                 <div>
                   <strong>{m.nome}</strong>
-                  <div className="secundario">{m.caminhoes.join(', ') || 'Veículo não informado'} · {m.cargas.length} carga(s)</div>
+                  <div className="secundario">{veiculosDoMotorista(m)} · {m.cargas.length} carga(s)</div>
+                  {m.cargas.some((c) => rotuloRota(c)) && (
+                    <div className="secundario">Rota: {[...new Set(m.cargas.map(rotuloRota).filter(Boolean))].join(', ')}</div>
+                  )}
                 </div>
                 <SeloSituacao situacao={m.situacao} />
               </div>

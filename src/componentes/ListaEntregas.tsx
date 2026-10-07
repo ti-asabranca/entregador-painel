@@ -6,7 +6,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import type { ClienteLista, MotoristaPainel, SituacaoCliente } from '../api/tipos';
 import { formatarDataHora, formatarDistancia, formatarHora } from '../util/formatacao';
-import { SITUACAO, SITUACAO_CLIENTE, rotuloMotivo } from '../util/rotulos';
+import { SITUACAO, SITUACAO_CLIENTE, rotuloMotivo, rotuloRota, veiculosDoMotorista } from '../util/rotulos';
 import { SeloSituacao } from './Selo';
 
 const ORDEM_ROTA = {
@@ -77,7 +77,7 @@ function LinhaMotorista({ m: bruto }: { m: MotoristaPainel }) {
           </Link>
           <span className="secundario"> · {m.codigo}</span>
         </div>
-        <div className="secundario">{m.caminhoes.join(', ') || 'Veículo não informado'}</div>
+        <div className="secundario veiculo">{veiculosDoMotorista(m)}</div>
         <div className="secundario">Última conexão: {formatarDataHora(m.ultima_conexao)}</div>
         <div className="contadores">
           <Contador situacao="NAO_ENTREGUE" valor={m.clientes_nao_entregues} />
@@ -104,6 +104,7 @@ function LinhaMotorista({ m: bruto }: { m: MotoristaPainel }) {
           <div key={`${c.filial}|${c.codigo}|${c.seqcar}`}>
             <strong>Nº {c.codigo}/{c.seqcar}</strong>
             <span className="secundario"> · {c.data.split('-').reverse().join('/')}{c.hora ? ` ${c.hora}` : ''}</span>
+            {rotuloRota(c) && <div className="rota-carga">{rotuloRota(c)}</div>}
           </div>
         ))}
         <div className="secundario">Início das entregas: {m.inicio_entregas ? formatarDataHora(m.inicio_entregas) : '—'}</div>

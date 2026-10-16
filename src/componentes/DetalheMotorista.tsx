@@ -31,7 +31,8 @@ export function DetalheMotorista({ codigo, compacto = false }: { codigo: string;
   const geometrias = useMemo(() => ({
     melhor: d?.melhor_rota?.geometria ? decodificarPolyline(d.melhor_rota.geometria) : null,
     vigente: d?.rota_vigente?.geometria ? decodificarPolyline(d.rota_vigente.geometria) : null,
-  }), [d?.melhor_rota?.geometria, d?.rota_vigente?.geometria]);
+    ideal: d?.rota_ideal?.geometria ? decodificarPolyline(d.rota_ideal.geometria) : null,
+  }), [d?.melhor_rota?.geometria, d?.rota_vigente?.geometria, d?.rota_ideal?.geometria]);
 
   if (!d) {
     return <div className="aviso">{erro ?? (carregando ? 'Carregando…' : 'Sem dados.')}</div>;
@@ -43,6 +44,7 @@ export function DetalheMotorista({ codigo, compacto = false }: { codigo: string;
       .map((c) => [c.latitude!, c.longitude!] as [number, number]),
   ];
   const pct = percentualEntregue(d.peso_total, d.peso_restante);
+  const comparacao = compararComIdeal(d.rota_ideal?.distancia_m, d.percurso_distancia_m);
 
   return (
     <div className={`detalhe${compacto ? ' compacto' : ''}`}>
@@ -121,18 +123,38 @@ export function DetalheMotorista({ codigo, compacto = false }: { codigo: string;
       <section>
         <h3>Rotas</h3>
         <ul className="legenda-rotas">
-          <li><span className="linha melhor" /> Melhor rota (menor distância, da posição atual)
+          <li><span className="linha melhor" /> Melhor rota (menor distância, da posição atual
+            {d.melhor_rota?.distancia_m != null && `, ${formatarDistancia(d.melhor_rota.distancia_m)}`})
             {d.melhor_rota_aviso && <em className="secundario"> — {d.melhor_rota_aviso}</em>}</li>
           <li><span className="linha vigente" /> Rota que o motorista está seguindo
             {d.rota_vigente
               ? ` (${d.rota_vigente.origem === 'APP' ? 'calculada no app' : 'definida pela gestão'}, `
                 + `${formatarDistancia(d.rota_vigente.distancia_m)})`
               : ' — não calculada'}</li>
+          <li><span className="linha ideal" /> Rota ideal da viagem (saindo do CD por todos os clientes e voltando ao CD
+            {d.rota_ideal?.distancia_m != null ? `, ${formatarDistancia(d.rota_ideal.distancia_m)})` : ') — não calculada'}</li>
           <li><span className="linha percurso" /> Percurso realizado
-            {d.percurso_desde ? ` desde ${formatarHora(d.percurso_desde)}` : ' — sem pontos'}</li>
+            {d.percurso_desde
+              ? ` desde ${formatarHora(d.percurso_desde)}`
+                + (d.percurso_distancia_m != null ? ` (${formatarDistancia(d.percurso_distancia_m)})` : '')
+              : ' — sem pontos'}</li>
         </ul>
+        {comparacao && (
+          <p className="comparacao-rotas"
+            title="Percurso aproximado pelos pontos do rastreio. Compare ao final da viagem, com o caminhão de volta ao CD.">
+            Realizado x ideal:{' '}
+            <span className={comparacao.diferenca_m > 0 ? 'acima' : 'abaixo'}>
+              {comparacao.diferenca_m > 0 ? '+' : '−'}{formatarDistancia(Math.abs(comparacao.diferenca_m))}
+              {' '}({comparacao.diferenca_m > 0 ? '+' : '−'}{Math.abs(comparacao.percentual)}%)
+            </span>
+            {d.clientes_pendentes > 0 && <span className="secundario"> — viagem em andamento</span>}
+          </p>
+        )}
         <MapaBase pontos={pontosMapa} chaveEnquadramento={d.codigo} className="mapa-detalhe">
           {d.percurso.length > 1 && <Polyline positions={d.percurso} pathOptions={{ color: '#757575', weight: 4, opacity: 0.7 }} />}
+          {geometrias.ideal && (
+            <Polyline positions={geometrias.ideal} pathOptions={{ color: '#8e24aa', weight: 3, opacity: 0.8, dashArray: '2 6' }} />
+          )}
           {geometrias.vigente && (
             <Polyline positions={geometrias.vigente} pathOptions={{ color: '#1565c0', weight: 3, dashArray: '6 8' }} />
           )}
@@ -205,4 +227,11 @@ export function DetalheMotorista({ codigo, compacto = false }: { codigo: string;
       </footer>
     </div>
   );
+}
+
+/** Diferença do percurso realizado em relação à rota ideal (positivo = rodou mais que o ideal). */
+function compararComIdeal(idealM: number | null | undefined, realizadoM: number | null) {
+  if (!idealM || realizadoM == null) return null;
+  const diferenca_m = realizadoM - idealM;
+  return { diferenca_m, percentual: Math.round((diferenca_m / idealM) * 100) };
 }

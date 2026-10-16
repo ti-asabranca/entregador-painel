@@ -141,6 +141,10 @@ a { color: var(--azul); }
 .legenda-rotas .linha.melhor { border-color: #2e7d32; }
 .legenda-rotas .linha.vigente { border-color: #1565c0; border-top-style: dashed; }
 .legenda-rotas .linha.percurso { border-color: #757575; }
+.legenda-rotas .linha.ideal { border-color: #8e24aa; border-top-style: dotted; }
+.comparacao-rotas { margin: 0 0 8px; font-size: 0.88rem; }
+.comparacao-rotas .acima { color: #c62828; font-weight: 600; }
+.comparacao-rotas .abaixo { color: #2e7d32; font-weight: 600; }
 .lista-clientes { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
 .cliente { display: flex; gap: 10px; align-items: center; padding: 8px; border-radius: 8px; background: var(--fundo); }
 .cliente.entregue { opacity: 0.75; }

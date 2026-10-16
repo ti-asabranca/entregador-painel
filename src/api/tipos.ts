@@ -237,8 +237,12 @@ export interface DetalheMotorista extends Motorista {
   rota_vigente: Rota | null;
   melhor_rota: Rota | null;
   melhor_rota_aviso: string | null;
+  /** Rota ideal da viagem: do depósito (CD) por todos os clientes e de volta ao CD. */
+  rota_ideal: Rota | null;
   percurso: [number, number][];
   percurso_desde: string | null;
+  /** Distância aproximada do percurso realizado (soma dos trechos do rastreio), em metros. */
+  percurso_distancia_m: number | null;
 }
 
 export type TipoOcorrencia = 'NOTA_NAO_ENTREGUE' | 'ITEM_DEVOLVIDO';

@@ -17,6 +17,7 @@ import { ORDEM_SITUACOES, SITUACAO, rotuloMotivo, rotuloRota, textoBuscaVeiculoR
 
 const INTERVALO_MS = 30000;
 const CHAVE_VISAO = 'gestao.visao_entregadores';
+const CHAVE_SITUACOES = 'gestao.situacoes_entregadores';
 
 type Visao = 'lista' | 'cartoes';
 
@@ -25,6 +26,16 @@ function lerVisao(): Visao {
     return localStorage.getItem(CHAVE_VISAO) === 'cartoes' ? 'cartoes' : 'lista';
   } catch {
     return 'lista';
+  }
+}
+
+/** Situações marcadas no filtro (lista vazia = todas), lembradas neste navegador. */
+function lerSituacoes(): Situacao[] {
+  try {
+    const salvas = JSON.parse(localStorage.getItem(CHAVE_SITUACOES) ?? '[]') as unknown;
+    return Array.isArray(salvas) ? ORDEM_SITUACOES.filter((s) => salvas.includes(s)) : [];
+  } catch {
+    return [];
   }
 }
 
@@ -61,7 +72,18 @@ export function EntregadoresPagina() {
       setDevolvendo(false);
     }
   }
-  const [filtro, setFiltro] = useState<Situacao | 'TODOS'>('TODOS');
+  // Várias situações ao mesmo tempo (caixas de seleção); nenhuma marcada = todas.
+  const [situacoes, setSituacoes] = useState<Situacao[]>(lerSituacoes);
+  const definirSituacoes = (lista: Situacao[]) => {
+    setSituacoes(lista);
+    try {
+      localStorage.setItem(CHAVE_SITUACOES, JSON.stringify(lista));
+    } catch {
+      // preferência só nesta aba
+    }
+  };
+  const alternarSituacao = (s: Situacao) =>
+    definirSituacoes(situacoes.includes(s) ? situacoes.filter((x) => x !== s) : ORDEM_SITUACOES.filter((x) => x === s || situacoes.includes(x)));
   const [busca, setBusca] = useState('');
   const [visao, setVisao] = useState<Visao>(lerVisao);
 
@@ -77,10 +99,10 @@ export function EntregadoresPagina() {
   const lista = useMemo(() => {
     const termo = busca.trim().toLowerCase();
     return (dados?.motoristas ?? [])
-      .filter((m) => filtro === 'TODOS' || m.situacao === filtro)
+      .filter((m) => situacoes.length === 0 || situacoes.includes(m.situacao))
       .filter((m) => !termo || m.nome.toLowerCase().includes(termo) || m.codigo.includes(termo)
         || textoBuscaVeiculoRota(m).includes(termo));
-  }, [dados, filtro, busca]);
+  }, [dados, situacoes, busca]);
 
   return (
     <main className="pagina">
@@ -110,12 +132,14 @@ export function EntregadoresPagina() {
           <button type="button" className={visao === 'lista' ? 'ativo' : ''} onClick={() => trocarVisao('lista')}>Lista</button>
           <button type="button" className={visao === 'cartoes' ? 'ativo' : ''} onClick={() => trocarVisao('cartoes')}>Cartões</button>
         </div>
-        <div className="chips" role="group" aria-label="Filtrar por situação">
-          <button type="button" className={filtro === 'TODOS' ? 'ativo' : ''} onClick={() => setFiltro('TODOS')}>Todos</button>
+        <div className="chips" role="group" aria-label="Filtrar por situação (marque uma ou mais)">
+          <button type="button" className={situacoes.length === 0 ? 'ativo' : ''} onClick={() => definirSituacoes([])}
+            title="Mostrar todas as situações">Todos</button>
           {ORDEM_SITUACOES.map((s) => (
-            <button key={s} type="button" className={filtro === s ? 'ativo' : ''} onClick={() => setFiltro(s)}>
+            <label key={s} className={`chip-opcao${situacoes.includes(s) ? ' ativo' : ''}`}>
+              <input type="checkbox" checked={situacoes.includes(s)} onChange={() => alternarSituacao(s)} />
               {SITUACAO[s].rotulo} ({dados?.resumo.por_situacao[s] ?? 0})
-            </button>
+            </label>
           ))}
         </div>
       </div>

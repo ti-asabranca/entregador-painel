@@ -57,6 +57,14 @@ a { color: var(--azul); }
   border: 1px solid var(--borda); background: #fff; border-radius: 999px; padding: 6px 12px; cursor: pointer;
 }
 .chips button.ativo { background: var(--azul); color: #fff; border-color: var(--azul); }
+/* Situação com caixa de seleção (várias ao mesmo tempo). */
+.chips .chip-opcao {
+  display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--borda); background: #fff;
+  border-radius: 999px; padding: 6px 12px; cursor: pointer; user-select: none;
+}
+.chips .chip-opcao input { margin: 0; accent-color: var(--azul); cursor: pointer; }
+.chips .chip-opcao.ativo { background: #e8eef7; border-color: var(--azul); color: var(--azul); font-weight: 600; }
+.chips .chip-opcao:focus-within { outline: 2px solid var(--azul); outline-offset: 1px; }
 
 .aviso { padding: 12px 14px; border-radius: 8px; background: #e8eef7; margin: 8px 0; }
 .aviso.erro { background: #fdecea; color: var(--vermelho); }

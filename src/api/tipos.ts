@@ -156,6 +156,8 @@ export interface ClienteLista {
   ordem: number | null;
   latitude?: number | null;
   longitude?: number | null;
+  /** Cliente food (vendedor 5 da nota na lista da API): ícone de cozinheiro. */
+  food?: boolean;
 }
 
 /** Motorista no painel (lista e mapa). */

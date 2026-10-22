@@ -35,6 +35,24 @@ function IconePessoa({ cor, titulo, tamanho = 20 }: { cor: string; titulo: strin
   );
 }
 
+/** Cozinheiro (cliente food): silhueta de pessoa com chapéu de chef, na cor da situação do cliente. */
+function IconeCozinheiro({ cor, titulo, tamanho = 20 }: { cor: string; titulo: string; tamanho?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" width={tamanho} height={tamanho} role="img" aria-label={titulo}>
+      <title>{titulo}</title>
+      <path fill={cor} d="M7.5 6.2a2.6 2.6 0 0 1 2.6-2.4 2.9 2.9 0 0 1 3.8 0 2.6 2.6 0 0 1 2.6 4.3V10h-9V8.1a2.6 2.6 0 0 1 0-1.9z" />
+      <rect x="7.5" y="10.6" width="9" height="1.4" rx="0.4" fill={cor} />
+      <circle cx="12" cy="14.6" r="2.6" fill={cor} />
+      <path d="M5 23c0-3.9 3.1-6 7-6s7 2.1 7 6z" fill={cor} />
+    </svg>
+  );
+}
+
+/** Ícone do cliente: cozinheiro para os clientes food, pessoa para os demais. */
+function IconeCliente({ food, ...props }: { food?: boolean; cor: string; titulo: string; tamanho?: number }) {
+  return food ? <IconeCozinheiro {...props} /> : <IconePessoa {...props} />;
+}
+
 function IconeCaminhao({ cor }: { cor: string }) {
   return (
     <svg viewBox="0 0 24 24" width="22" height="22" role="img" aria-label="Posição do caminhão">
@@ -57,7 +75,7 @@ function Contador({ situacao, valor }: { situacao: SituacaoCliente; valor: numbe
 
 function tituloCliente(c: ClienteLista, ideal: boolean): string {
   const ordem = c.ordem !== null ? `${c.ordem}º${ideal ? ' na rota ideal' : ''} · ` : '';
-  return `${ordem}${c.nome ?? `${c.codigo}/${c.loja}`}${c.municipio ? ` (${c.municipio})` : ''} — ${SITUACAO_CLIENTE[c.situacao].rotulo}`;
+  return `${ordem}${c.nome ?? `${c.codigo}/${c.loja}`}${c.municipio ? ` (${c.municipio})` : ''}${c.food ? ' · Food' : ''} — ${SITUACAO_CLIENTE[c.situacao].rotulo}`;
 }
 
 /** "há 35 min" quando a última conexão passou do limite (ou nunca houve); null quando está em dia. */
@@ -179,7 +197,7 @@ function LinhaMotorista({ m: bruto, aoAlterar, aoRetirar, abrirResumo }: {
                   e.stopPropagation();
                   abrirResumo({ tipo: 'cliente', motorista: m.codigo, cliente: c.codigo, loja: c.loja, x: e.clientX, y: e.clientY });
                 }}>
-                <IconePessoa cor={SITUACAO_CLIENTE[c.situacao].cor} titulo={tituloCliente(c, ideal)} />
+                <IconeCliente food={c.food} cor={SITUACAO_CLIENTE[c.situacao].cor} titulo={tituloCliente(c, ideal)} />
               </button>
             </span>
           ))}
@@ -227,6 +245,7 @@ export function ListaEntregas({ motoristas, aoAlterar, aoRetirar }: {
         {(['ENTREGUE', 'PARCIAL', 'NAO_ENTREGUE', 'PENDENTE'] as SituacaoCliente[]).map((s) => (
           <span key={s}><IconePessoa cor={SITUACAO_CLIENTE[s].cor} titulo={SITUACAO_CLIENTE[s].rotulo} /> {SITUACAO_CLIENTE[s].rotulo}</span>
         ))}
+        <span><IconeCozinheiro cor={SITUACAO_CLIENTE.PENDENTE.cor} titulo="Cliente food" /> Cliente food (cor = situação)</span>
         <span>Ícones na ordem da rota ideal: cinza antes de verde/vermelho = cliente pulado. Clique no cliente ou no caminhão para ver o resumo.</span>
         <span>Percentual = clientes concluídos (entregues, parciais ou não entregues) sobre o total.</span>
         <span>* Peso parcial: há itens sem B1_PESBRU.</span>

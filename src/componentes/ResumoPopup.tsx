@@ -12,6 +12,8 @@ import { useAuth } from '../auth/AuthContext';
 import { formatarDecorrido, formatarDistancia, formatarDuracao, formatarHora, formatarPeso } from '../util/formatacao';
 import { SITUACAO_CLIENTE, rotuloMotivo } from '../util/rotulos';
 
+const MOEDA = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
 interface Previsao {
   ordem: number;
   distancia_m: number | null;
@@ -35,6 +37,9 @@ interface ResumoCliente {
   peso_total: number | null;
   peso_pendente: number | null;
   peso_incompleto: boolean;
+  /** Σ D2_TOTAL dos itens das notas do cliente (null = sem itens recebidos). */
+  valor_total?: number | null;
+  valor_incompleto?: boolean;
   chegou_em: string | null;
   iniciou_em: string | null;
   terminou_em: string | null;
@@ -92,6 +97,8 @@ function ConteudoCliente({ r }: { r: ResumoCliente }) {
       <Linha rotulo="Notas" valor={`${r.notas_entregues} de ${r.notas} entregue(s)`} />
       <Linha rotulo="Peso" valor={`${formatarPeso(r.peso_total)}${r.peso_incompleto ? '*' : ''}${
         !atendido && r.peso_pendente !== null && r.peso_pendente !== r.peso_total ? ` (falta ${formatarPeso(r.peso_pendente)})` : ''}`} />
+      <Linha rotulo="Valor das notas" valor={r.valor_total === null || r.valor_total === undefined
+        ? '—' : `${MOEDA.format(r.valor_total)}${r.valor_incompleto ? '*' : ''}`} />
 
       {!atendido && !r.no_cliente_agora && (
         <div className="resumo-bloco">
@@ -114,6 +121,7 @@ function ConteudoCliente({ r }: { r: ResumoCliente }) {
         </div>
       )}
       {r.peso_incompleto && <div className="secundario">* Peso parcial: há itens sem B1_PESBRU.</div>}
+      {r.valor_incompleto && <div className="secundario">* Valor parcial: há notas sem itens recebidos.</div>}
     </>
   );
 }

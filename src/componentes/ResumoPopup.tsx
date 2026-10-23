@@ -37,7 +37,7 @@ interface ResumoCliente {
   peso_total: number | null;
   peso_pendente: number | null;
   peso_incompleto: boolean;
-  /** Σ D2_TOTAL dos itens das notas do cliente (null = sem itens recebidos). */
+  /** Σ por nota: D2_TOTAL dos itens ou, sem itens, F2_VALMERC (null = nenhuma das duas fontes). */
   valor_total?: number | null;
   valor_incompleto?: boolean;
   chegou_em: string | null;
@@ -120,8 +120,8 @@ function ConteudoCliente({ r }: { r: ResumoCliente }) {
           )}
         </div>
       )}
-      {r.peso_incompleto && <div className="secundario">* Peso parcial: há itens sem B1_PESBRU.</div>}
-      {r.valor_incompleto && <div className="secundario">* Valor parcial: há notas sem itens recebidos.</div>}
+      {r.peso_incompleto && <div className="secundario">* Peso parcial: há notas sem peso (itens sem B1_PESBRU e sem F2_PBRUTO).</div>}
+      {r.valor_incompleto && <div className="secundario">* Valor parcial: há notas sem itens recebidos e sem F2_VALMERC.</div>}
     </>
   );
 }

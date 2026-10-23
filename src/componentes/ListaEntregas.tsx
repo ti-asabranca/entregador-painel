@@ -21,6 +21,9 @@ const ORDEM_ROTA = {
   ERP: 'Ordem do ERP (sem rota calculada)',
 } as const;
 
+/** Cor fixa do caminhão (contorno): nenhuma situação de cliente usa (a do motorista fica no selo). */
+const COR_CAMINHAO = '#263238';
+
 /** Sem conexão por mais que isso: mostra o alerta de última conexão. */
 const ALERTA_CONEXAO_MIN = 20;
 
@@ -57,7 +60,13 @@ function IconeCaminhao({ cor }: { cor: string }) {
   return (
     <svg viewBox="0 0 24 24" width="22" height="22" role="img" aria-label="Posição do caminhão">
       <title>Caminhão (próximo cliente na sequência à direita)</title>
-      <path fill={cor} d="M2 6h12v9H2zM14 9h4l3.5 3.5V15H14zM6 18.5a1.8 1.8 0 1 0 0-.01zM17 18.5a1.8 1.8 0 1 0 0-.01z" />
+      {/* Só o contorno, para destacar dos ícones (preenchidos) dos clientes. */}
+      <g fill="none" stroke={cor} strokeWidth="1.7" strokeLinejoin="round" strokeLinecap="round">
+        <rect x="2.5" y="6" width="11" height="9" rx="1" />
+        <path d="M13.5 9h4l3.5 3.5V15h-7.5z" />
+        <circle cx="6.5" cy="18" r="1.8" fill="#fff" />
+        <circle cx="17" cy="18" r="1.8" fill="#fff" />
+      </g>
     </svg>
   );
 }
@@ -192,7 +201,7 @@ function LinhaMotorista({ m: bruto, aoAlterar, aoRetirar, abrirResumo }: {
                     e.stopPropagation();
                     abrirResumo({ tipo: 'caminhao', motorista: m.codigo, motoristaNome: m.nome, x: e.clientX, y: e.clientY });
                   }}>
-                  <IconeCaminhao cor={SITUACAO[m.situacao].cor} />
+                  <IconeCaminhao cor={COR_CAMINHAO} />
                 </button>
               )}
               <button type="button" className="icone-botao" aria-label={`Resumo: ${tituloCliente(c, ideal)}`}

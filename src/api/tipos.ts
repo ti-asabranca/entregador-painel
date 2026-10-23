@@ -1,6 +1,7 @@
 /** Tipos das respostas de /gestao (entregador-api/services/gestaoService.js). */
 
-export type Situacao = 'PAUSA' | 'ENTREGANDO' | 'ANDANDO' | 'PARADO' | 'SEM_SINAL';
+/** RETORNOU = viagem finalizada (retorno ao depósito): o aplicativo não envia mais a posição. */
+export type Situacao = 'PAUSA' | 'ENTREGANDO' | 'ANDANDO' | 'PARADO' | 'SEM_SINAL' | 'RETORNOU';
 export type SituacaoCliente = 'PENDENTE' | 'ENTREGUE' | 'NAO_ENTREGUE' | 'PARCIAL';
 
 export type Perfil = 'ADMINISTRADOR' | 'USUARIO';
@@ -131,6 +132,8 @@ export interface Motorista {
   posicao: Posicao | null;
   pausa: { motivo: string; descricao: string | null; desde: string } | null;
   visita: { cliente_codigo: string; cliente_loja: string; cliente_nome: string | null; desde: string } | null;
+  /** Retorno ao depósito (viagem finalizada no aplicativo); null = em viagem. */
+  retornou_em?: string | null;
   ultima_conexao: string | null;
   inicio_entregas: string | null;
   notas_total: number;

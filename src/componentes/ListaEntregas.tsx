@@ -116,7 +116,8 @@ function LinhaMotorista({ m: bruto, aoAlterar, aoRetirar, abrirResumo }: {
     ? m.clientes.findIndex((c) => c.codigo === m.visita!.cliente_codigo && c.loja === m.visita!.cliente_loja)
     : -1;
   const posCaminhao = noCliente >= 0 ? noCliente : m.clientes.findIndex((c) => c.situacao === 'PENDENTE');
-  const conexao = alertaConexao(m.ultima_conexao);
+  // Viagem finalizada: o aplicativo parou de enviar a posição de propósito (sem alerta de conexão).
+  const conexao = m.situacao === 'RETORNOU' ? null : alertaConexao(m.ultima_conexao);
   const abrir = () => navegar(`/motoristas/${m.codigo}`);
 
   return (
@@ -148,6 +149,7 @@ function LinhaMotorista({ m: bruto, aoAlterar, aoRetirar, abrirResumo }: {
           <SeloSituacao situacao={m.situacao} />
           {m.pausa && <span className="secundario">{rotuloMotivo(m.pausa.motivo)} desde {formatarHora(m.pausa.desde)}</span>}
           {m.visita && <span className="secundario">No cliente {m.visita.cliente_nome ?? m.visita.cliente_codigo}</span>}
+          {m.retornou_em && <span className="secundario">às {formatarHora(m.retornou_em)}</span>}
         </div>
       </td>
       <td className="col-carga">
@@ -183,7 +185,7 @@ function LinhaMotorista({ m: bruto, aoAlterar, aoRetirar, abrirResumo }: {
         <div className="icones-clientes" title={ORDEM_ROTA[m.ordem_rota]}>
           {m.clientes.map((c, i) => (
             <span key={`${c.codigo}|${c.loja}`} className="icone-pessoa">
-              {i === posCaminhao && m.situacao !== 'SEM_SINAL' && (
+              {i === posCaminhao && m.situacao !== 'SEM_SINAL' && m.situacao !== 'RETORNOU' && (
                 <button type="button" className="icone-botao" aria-label={`Resumo do caminhão de ${m.nome}`}
                   onClick={(e) => {
                     e.stopPropagation();

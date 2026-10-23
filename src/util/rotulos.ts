@@ -8,9 +8,10 @@ export const SITUACAO: Record<Situacao, { rotulo: string; cor: string; descricao
   PARADO: { rotulo: 'Parado', cor: '#ef6c00', descricao: 'Parado fora de cliente, sem pausa registrada' },
   PAUSA: { rotulo: 'Em pausa', cor: '#6a1b9a', descricao: 'Pausa registrada pelo motorista' },
   SEM_SINAL: { rotulo: 'Sem sinal', cor: '#616161', descricao: 'Sem posição há mais de 15 minutos' },
+  RETORNOU: { rotulo: 'Retornou ao depósito', cor: '#00695c', descricao: 'Viagem finalizada no aplicativo (sem envio de posição)' },
 };
 
-export const ORDEM_SITUACOES: Situacao[] = ['ENTREGANDO', 'ANDANDO', 'PARADO', 'PAUSA', 'SEM_SINAL'];
+export const ORDEM_SITUACOES: Situacao[] = ['ENTREGANDO', 'ANDANDO', 'PARADO', 'PAUSA', 'SEM_SINAL', 'RETORNOU'];
 
 export const SITUACAO_CLIENTE: Record<SituacaoCliente, { rotulo: string; cor: string }> = {
   PENDENTE: { rotulo: 'Pendente', cor: '#9e9e9e' },

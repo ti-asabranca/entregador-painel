@@ -111,11 +111,12 @@ function LinhaMotorista({ m: bruto, aoAlterar, aoRetirar, abrirResumo }: {
   const concluidos = m.clientes_total - m.clientes_pendentes;
   const pct = m.clientes_total ? Math.round((concluidos / m.clientes_total) * 100) : 0;
   const pesoEntregue = m.peso_total === null ? null : Math.max(0, m.peso_total - m.peso_restante);
-  // Caminhão: no cliente em atendimento; senão, antes do próximo cliente pendente.
+  // No cliente em atendimento: o caminhão some e o ícone do cliente fica azul e piscando.
+  // Senão, o caminhão fica antes do próximo cliente pendente.
   const noCliente = m.visita
     ? m.clientes.findIndex((c) => c.codigo === m.visita!.cliente_codigo && c.loja === m.visita!.cliente_loja)
     : -1;
-  const posCaminhao = noCliente >= 0 ? noCliente : m.clientes.findIndex((c) => c.situacao === 'PENDENTE');
+  const posCaminhao = noCliente >= 0 ? -1 : m.clientes.findIndex((c) => c.situacao === 'PENDENTE');
   // Viagem finalizada: o aplicativo parou de enviar a posição de propósito (sem alerta de conexão).
   const conexao = m.situacao === 'RETORNOU' ? null : alertaConexao(m.ultima_conexao);
   const abrir = () => navegar(`/motoristas/${m.codigo}`);
@@ -184,7 +185,7 @@ function LinhaMotorista({ m: bruto, aoAlterar, aoRetirar, abrirResumo }: {
         <div className="progresso-fundo" style={{ width: `${pct}%` }} aria-hidden="true" />
         <div className="icones-clientes" title={ORDEM_ROTA[m.ordem_rota]}>
           {m.clientes.map((c, i) => (
-            <span key={`${c.codigo}|${c.loja}`} className="icone-pessoa">
+            <span key={`${c.codigo}|${c.loja}`} className={`icone-pessoa${i === noCliente ? ' no-cliente' : ''}`}>
               {i === posCaminhao && m.situacao !== 'SEM_SINAL' && m.situacao !== 'RETORNOU' && (
                 <button type="button" className="icone-botao" aria-label={`Resumo do caminhão de ${m.nome}`}
                   onClick={(e) => {
@@ -199,7 +200,9 @@ function LinhaMotorista({ m: bruto, aoAlterar, aoRetirar, abrirResumo }: {
                   e.stopPropagation();
                   abrirResumo({ tipo: 'cliente', motorista: m.codigo, cliente: c.codigo, loja: c.loja, x: e.clientX, y: e.clientY });
                 }}>
-                <IconeCliente food={c.food} cor={SITUACAO_CLIENTE[c.situacao].cor} titulo={tituloCliente(c, ideal)} />
+                <IconeCliente food={c.food}
+                  cor={i === noCliente ? SITUACAO.ENTREGANDO.cor : SITUACAO_CLIENTE[c.situacao].cor}
+                  titulo={`${tituloCliente(c, ideal)}${i === noCliente ? ' · Caminhão no cliente' : ''}`} />
               </button>
             </span>
           ))}
@@ -248,6 +251,7 @@ export function ListaEntregas({ motoristas, aoAlterar, aoRetirar }: {
           <span key={s}><IconePessoa cor={SITUACAO_CLIENTE[s].cor} titulo={SITUACAO_CLIENTE[s].rotulo} /> {SITUACAO_CLIENTE[s].rotulo}</span>
         ))}
         <span><IconeCozinheiro cor={SITUACAO_CLIENTE.PENDENTE.cor} titulo="Cliente food" /> Cliente food (cor = situação)</span>
+        <span><span className="icone-pessoa no-cliente"><IconePessoa cor={SITUACAO.ENTREGANDO.cor} titulo="Caminhão no cliente" /></span> Caminhão no cliente (azul piscando)</span>
         <span>Ícones na ordem da rota ideal: cinza antes de verde/vermelho = cliente pulado. Clique no cliente ou no caminhão para ver o resumo.</span>
         <span>Percentual = clientes concluídos (entregues, parciais ou não entregues) sobre o total.</span>
         <span>* Peso parcial: há itens sem B1_PESBRU.</span>

@@ -204,6 +204,12 @@ a { color: var(--azul); }
 .progresso-fundo { position: absolute; left: 0; top: 0; bottom: 0; background: #e3f6e4; pointer-events: none; }
 .icones-clientes { position: relative; display: flex; flex-wrap: wrap; gap: 2px 4px; align-items: center; }
 .icone-pessoa { display: inline-flex; align-items: center; }
+/* Cliente em atendimento (caminhão no cliente): ícone azul piscando no lugar do caminhão. */
+.icone-pessoa.no-cliente { animation: piscar-no-cliente 1s ease-in-out infinite; }
+@keyframes piscar-no-cliente { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+@media (prefers-reduced-motion: reduce) {
+  .icone-pessoa.no-cliente { animation: none; border-radius: 50%; box-shadow: 0 0 0 2px #1565c0; }
+}
 .percentual {
   position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: #43a047; color: #fff;
   font-weight: 700; border-radius: 999px; padding: 3px 10px; font-size: 0.92rem;

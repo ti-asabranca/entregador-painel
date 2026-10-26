@@ -73,11 +73,11 @@ export function rotuloRota(c: Pick<CargaResumo, 'rota_codigo' | 'rota_descricao'
   return c.rota_descricao ? `${c.rota_descricao}${c.rota_codigo ? ` (${c.rota_codigo})` : ''}` : `Rota ${c.rota_codigo}`;
 }
 
-/** Texto para busca: códigos e placas dos caminhões, descrições e rotas. */
+/** Texto para busca: códigos e placas dos caminhões, descrições, rotas e cargas ("212553" ou "212553/01"). */
 export function textoBuscaVeiculoRota(m: Pick<Motorista, 'caminhoes' | 'veiculos' | 'cargas'>): string {
   return [
     ...m.caminhoes,
     ...(m.veiculos ?? []).flatMap((v) => [v.placa, v.descricao]),
-    ...m.cargas.flatMap((c) => [c.rota_codigo, c.rota_descricao]),
+    ...m.cargas.flatMap((c) => [c.rota_codigo, c.rota_descricao, `${c.codigo}/${c.seqcar}`]),
   ].filter(Boolean).join(' ').toLowerCase();
 }

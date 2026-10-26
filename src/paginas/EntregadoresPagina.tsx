@@ -126,7 +126,7 @@ export function EntregadoresPagina() {
       </div>
 
       <div className="filtros">
-        <input type="search" placeholder="Buscar motorista, código, placa ou rota" value={busca}
+        <input type="search" placeholder="Buscar motorista, código, placa, rota ou carga" value={busca}
           onChange={(e) => setBusca(e.target.value)} aria-label="Buscar" />
         <div className="alternar-visao" role="group" aria-label="Forma de exibição">
           <button type="button" className={visao === 'lista' ? 'ativo' : ''} onClick={() => trocarVisao('lista')}>Lista</button>

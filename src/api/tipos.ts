@@ -250,7 +250,7 @@ export interface DetalheMotorista extends Motorista {
   percurso_distancia_m: number | null;
 }
 
-export type TipoOcorrencia = 'NOTA_NAO_ENTREGUE' | 'ITEM_DEVOLVIDO';
+export type TipoOcorrencia = 'NOTA_NAO_ENTREGUE' | 'ITEM_DEVOLVIDO' | 'ACAO_DESFEITA';
 
 export interface Ocorrencia {
   tipo: TipoOcorrencia;
@@ -266,8 +266,9 @@ export interface Ocorrencia {
   cliente_loja: string;
   cliente_nome: string | null;
   municipio: string | null;
-  nf_doc: string;
-  nf_serie: string;
+  /** ACAO_DESFEITA de cliente, reenvio de carga ou retorno: sem nota. */
+  nf_doc: string | null;
+  nf_serie: string | null;
   pedido: string | null;
   item: string | null;
   produto: string | null;
@@ -275,8 +276,11 @@ export interface Ocorrencia {
   quantidade: number | null;
   quantidade_nota: number | null;
   unidade: string | null;
+  /** ACAO_DESFEITA: o que foi desfeito (NOTA, CLIENTE, REENVIO, RETORNO). */
   resultado: string | null;
+  /** ACAO_DESFEITA: resultado/modo do registro desfeito (ex.: ENTREGUE, NAO_ENTREGUE). */
   motivo: string | null;
+  /** ACAO_DESFEITA: horário (ISO) em que a ação desfeita tinha sido feita. */
   descricao: string | null;
   ocorrido_em: string | null;
 }

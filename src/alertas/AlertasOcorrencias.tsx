@@ -16,21 +16,24 @@ import type { Ocorrencia, RespostaOcorrencias } from '../api/tipos';
 import type { Alerta, RespostaAlertas } from '../api/tiposAnalise';
 import { useAuth } from '../auth/AuthContext';
 import { useConsulta } from '../hooks/useConsulta';
-import { TIPO_OCORRENCIA, rotuloMotivo } from '../util/rotulos';
+import { ACAO_DESFEITA, TIPO_OCORRENCIA, rotuloMotivo } from '../util/rotulos';
 
 const INTERVALO_MS = 60000;
 const MAX_VISTAS = 5000;
 const DURACAO_AVISO_MS = 15000;
 
-/** Chave estável de uma ocorrência (nota ou item de uma carga). */
+/** Chave estável de uma ocorrência (nota ou item de uma carga; ação desfeita: também cliente, o que e quando). */
 export function chaveOcorrencia(o: Ocorrencia): string {
-  return [o.tipo, o.filial, o.carga_codigo, o.seqcar, o.nf_doc, o.nf_serie, o.item ?? ''].join('|');
+  const base = [o.tipo, o.filial, o.carga_codigo, o.seqcar, o.nf_doc ?? '', o.nf_serie ?? '', o.item ?? ''];
+  if (o.tipo === 'ACAO_DESFEITA') base.push(o.cliente_codigo ?? '', o.resultado ?? '', o.ocorrido_em ?? '');
+  return base.join('|');
 }
 
 /** Texto curto do alerta. */
 export function resumoOcorrencia(o: Ocorrencia): string {
-  const cliente = o.cliente_nome ?? `${o.cliente_codigo}/${o.cliente_loja}`;
-  return `${TIPO_OCORRENCIA[o.tipo]}: ${cliente} — ${rotuloMotivo(o.motivo)}${o.motorista_nome ? ` (${o.motorista_nome})` : ''}`;
+  const cliente = o.cliente_nome ?? (o.cliente_codigo ? `${o.cliente_codigo}/${o.cliente_loja}` : `carga ${o.carga_codigo}`);
+  const oque = o.tipo === 'ACAO_DESFEITA' ? (ACAO_DESFEITA[o.resultado ?? ''] ?? o.resultado) : rotuloMotivo(o.motivo);
+  return `${TIPO_OCORRENCIA[o.tipo]}: ${cliente} — ${oque}${o.motorista_nome ? ` (${o.motorista_nome})` : ''}`;
 }
 
 interface Contexto {

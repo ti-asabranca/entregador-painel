@@ -1,5 +1,6 @@
 /**
- * Linha do tempo do motorista num dia (depósito, chegada/saída nos clientes, conclusões, pausas e GPS) e replay do
+ * Linha do tempo do motorista num dia (depósito, chegada/saída nos clientes, conclusões, ações desfeitas, pausas e
+ * GPS) e replay do
  * percurso: controle deslizante/play que move o caminhão pelos pontos gravados, com o trecho já percorrido destacado.
  */
 import { useEffect, useMemo, useState } from 'react';
@@ -25,6 +26,10 @@ const ROTULOS: Record<string, string> = {
   CONCLUSAO_NAO_ENTREGUE: 'Não entregue',
   PAUSA_INICIO: 'Início de pausa',
   PAUSA_FIM: 'Fim de pausa',
+  DESFEITO_NOTA: 'Desfez confirmação da nota',
+  DESFEITO_CLIENTE: 'Desfez conclusão do cliente',
+  DESFEITO_REENVIO: 'Desfez nota para reenvio',
+  DESFEITO_RETORNO: 'Desfez retorno ao depósito',
 };
 
 /** Classe visual por tipo: ocorrência (vermelho), pausa/parada (atenção), demais neutros. */
@@ -32,6 +37,7 @@ function classeEvento(tipo: string): string {
   if (tipo === 'CONCLUSAO_NAO_ENTREGUE') return 'evento critico';
   if (tipo === 'CONCLUSAO_PARCIAL' || tipo === 'PARADA_NAO_PLANEJADA' || tipo === 'GPS_SITUACAO') return 'evento atencao';
   if (tipo === 'CONCLUSAO_ENTREGUE') return 'evento sucesso';
+  if (tipo.startsWith('DESFEITO_')) return 'evento atencao';
   return 'evento';
 }
 
@@ -41,6 +47,12 @@ function textoEvento(e: EventoLinhaDoTempo): string {
   if (cliente) partes.push(cliente);
   if (e.motivo) partes.push(rotuloMotivo(e.motivo));
   if (e.tipo === 'GPS_SITUACAO' && e.detalhe) partes.push(e.detalhe.toLowerCase().replace(/_/g, ' '));
+  // Ação desfeita: detalhe = NF (ou carga); início = quando tinha sido feita (não é duração).
+  if (e.tipo.startsWith('DESFEITO_')) {
+    if (e.detalhe) partes.push(e.tipo === 'DESFEITO_NOTA' || e.tipo === 'DESFEITO_REENVIO' ? `NF ${e.detalhe}` : `carga ${e.detalhe}`);
+    if (e.inicio) partes.push(`feito às ${formatarHora(e.inicio)}`);
+    return partes.join(' · ');
+  }
   if (e.inicio) {
     const dur = (new Date(e.em).getTime() - new Date(e.inicio).getTime()) / 1000;
     if (dur > 0) partes.push(`duração ${formatarDuracao(dur)}`);

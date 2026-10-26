@@ -23,6 +23,15 @@ export const SITUACAO_CLIENTE: Record<SituacaoCliente, { rotulo: string; cor: st
 export const TIPO_OCORRENCIA: Record<TipoOcorrencia, string> = {
   NOTA_NAO_ENTREGUE: 'Nota não entregue',
   ITEM_DEVOLVIDO: 'Item devolvido',
+  ACAO_DESFEITA: 'Ação desfeita',
+};
+
+/** O que o motorista desfez no aplicativo (ocorrência ACAO_DESFEITA e linha do tempo DESFEITO_*). */
+export const ACAO_DESFEITA: Record<string, string> = {
+  NOTA: 'Confirmação da nota',
+  CLIENTE: 'Conclusão do cliente',
+  REENVIO: 'Nota para reenvio',
+  RETORNO: 'Retorno ao depósito',
 };
 
 export const TIPO_ALERTA: Record<TipoAlerta, string> = {

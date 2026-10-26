@@ -1,13 +1,29 @@
 /**
- * Funcionalidade 3: notas não entregues e itens devolvidos das cargas em aberto (o motorista ainda não voltou),
- * com o motivo, para a gerência agir antes da prestação de contas. Filtros e exportação para CSV.
+ * Funcionalidade 3: notas não entregues, itens devolvidos e ações desfeitas pelo motorista das cargas em aberto (o
+ * motorista ainda não voltou), com o motivo, para a gerência agir antes da prestação de contas. Filtros e CSV.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { chaveOcorrencia, useAlertas } from '../alertas/AlertasOcorrencias';
 import type { Ocorrencia, TipoOcorrencia } from '../api/tipos';
 import { formatarDataHora, formatarHora } from '../util/formatacao';
-import { TIPO_OCORRENCIA, rotuloMotivo } from '../util/rotulos';
+import { ACAO_DESFEITA, TIPO_OCORRENCIA, rotuloMotivo } from '../util/rotulos';
+
+const CLASSE_TIPO: Record<TipoOcorrencia, string> = {
+  NOTA_NAO_ENTREGUE: 'vermelha', ITEM_DEVOLVIDO: 'amarela', ACAO_DESFEITA: 'cinza',
+};
+
+/** Ação desfeita: o que foi desfeito (motivo) e quando tinha sido feito (descrição). */
+function motivoOcorrencia(o: Ocorrencia): { titulo: string; detalhe: string | null } {
+  if (o.tipo !== 'ACAO_DESFEITA') return { titulo: rotuloMotivo(o.motivo), detalhe: o.descricao };
+  const feito = o.descricao ? `feito às ${formatarDataHora(o.descricao)}` : null;
+  return {
+    titulo: ACAO_DESFEITA[o.resultado ?? ''] ?? o.resultado ?? '—',
+    detalhe: [o.motivo ? rotuloMotivo(o.motivo) : null, feito].filter(Boolean).join(' · ') || null,
+  };
+}
+
+const notaTexto = (o: Ocorrencia) => (o.nf_doc ? `${o.nf_doc}-${o.nf_serie}` : '');
 
 /** Célula CSV segura: aspas escapadas e neutralização de fórmulas (=, +, -, @) ao abrir no Excel. */
 function celula(v: unknown): string {
@@ -21,9 +37,9 @@ function exportarCsv(lista: Ocorrencia[]): void {
     'Qtd. devolvida', 'Qtd. nota', 'Motivo', 'Descrição'];
   const linhas = lista.map((o) => [
     TIPO_OCORRENCIA[o.tipo], formatarDataHora(o.ocorrido_em), `${o.motorista ?? ''} ${o.motorista_nome ?? ''}`.trim(),
-    `${o.carga_codigo}/${o.seqcar}`, `${o.cliente_codigo}/${o.cliente_loja} ${o.cliente_nome ?? ''}`.trim(), o.municipio,
-    `${o.nf_doc}-${o.nf_serie}`, o.pedido, o.produto ? `${o.produto} ${o.produto_descricao ?? ''}`.trim() : '',
-    o.quantidade, o.quantidade_nota, rotuloMotivo(o.motivo), o.descricao,
+    `${o.carga_codigo}/${o.seqcar}`, o.cliente_codigo ? `${o.cliente_codigo}/${o.cliente_loja} ${o.cliente_nome ?? ''}`.trim() : '',
+    o.municipio, notaTexto(o), o.pedido, o.produto ? `${o.produto} ${o.produto_descricao ?? ''}`.trim() : '',
+    o.quantidade, o.quantidade_nota, motivoOcorrencia(o).titulo, motivoOcorrencia(o).detalhe,
   ].map(celula).join(';'));
   const blob = new Blob([`﻿${[cabecalho.map(celula).join(';'), ...linhas].join('\r\n')}`], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
@@ -61,6 +77,7 @@ export function OcorrenciasPagina() {
   }, [todas, tipo, motivo, motorista, busca]);
 
   const notas = lista.filter((o) => o.tipo === 'NOTA_NAO_ENTREGUE').length;
+  const desfeitas = lista.filter((o) => o.tipo === 'ACAO_DESFEITA').length;
 
   return (
     <main className="pagina">
@@ -68,7 +85,8 @@ export function OcorrenciasPagina() {
         <h1>Ocorrências das entregas em andamento</h1>
         <div className="resumo">
           <span><strong>{notas}</strong> notas não entregues</span>
-          <span><strong>{lista.length - notas}</strong> itens devolvidos</span>
+          <span><strong>{lista.length - notas - desfeitas}</strong> itens devolvidos</span>
+          <span><strong>{desfeitas}</strong> ações desfeitas</span>
           {dados && <span className="secundario">Atualizado às {formatarHora(dados.atualizado_em)}{carregando ? '…' : ''}</span>}
           <button type="button" className="botao secundario-botao" onClick={() => exportarCsv(lista)} disabled={!lista.length}>
             Exportar CSV
@@ -113,20 +131,22 @@ export function OcorrenciasPagina() {
                     {novas.has(chaveOcorrencia(o)) && <div><span className="etiqueta nova">Nova</span></div>}
                   </td>
                   <td>
-                    <span className={`etiqueta ${o.tipo === 'NOTA_NAO_ENTREGUE' ? 'vermelha' : 'amarela'}`}>
+                    <span className={`etiqueta ${CLASSE_TIPO[o.tipo] ?? 'amarela'}`}>
                       {TIPO_OCORRENCIA[o.tipo]}
                     </span>
                     {o.resultado === 'PARCIAL' && <div className="secundario">cliente com entrega parcial</div>}
                   </td>
                   <td>
-                    <strong>{rotuloMotivo(o.motivo)}</strong>
-                    {o.descricao && <div className="secundario">{o.descricao}</div>}
+                    <strong>{motivoOcorrencia(o).titulo}</strong>
+                    {motivoOcorrencia(o).detalhe && <div className="secundario">{motivoOcorrencia(o).detalhe}</div>}
                   </td>
                   <td>
                     {o.cliente_nome ?? '—'}
-                    <div className="secundario">{o.cliente_codigo}/{o.cliente_loja}{o.municipio ? ` · ${o.municipio}` : ''}</div>
+                    {o.cliente_codigo && (
+                      <div className="secundario">{o.cliente_codigo}/{o.cliente_loja}{o.municipio ? ` · ${o.municipio}` : ''}</div>
+                    )}
                   </td>
-                  <td>{o.nf_doc}-{o.nf_serie}<div className="secundario">Pedido {o.pedido ?? '—'}</div></td>
+                  <td>{notaTexto(o) || '—'}<div className="secundario">Pedido {o.pedido ?? '—'}</div></td>
                   <td>
                     {o.item ? (
                       <>
@@ -135,7 +155,7 @@ export function OcorrenciasPagina() {
                           {o.quantidade} de {o.quantidade_nota ?? '?'} {o.unidade ?? ''} · cód. {o.produto}
                         </div>
                       </>
-                    ) : <span className="secundario">Nota inteira</span>}
+                    ) : <span className="secundario">{o.nf_doc ? 'Nota inteira' : '—'}</span>}
                   </td>
                   <td>
                     {o.motorista ? <Link to={`/motoristas/${o.motorista}`}>{o.motorista_nome ?? o.motorista}</Link> : '—'}

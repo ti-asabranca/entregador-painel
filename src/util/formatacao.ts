@@ -40,3 +40,15 @@ export function percentualEntregue(total: number | null, restante: number | null
   if (!total || total <= 0 || restante === null) return null;
   return Math.min(100, Math.max(0, Math.round(((total - restante) / total) * 100)));
 }
+
+/**
+ * Lê "latitude, longitude" digitada ou colada (ex.: do Google Maps): ponto ou vírgula decimal, separadas por vírgula,
+ * ponto e vírgula ou espaço. Inválida (faixa, zero ou quantidade de números) → null.
+ */
+export function lerCoordenada(texto: string): [number, number] | null {
+  const n = (texto.match(/-?\d+(?:[.,]\d+)?/g) ?? []).map((v) => Number(v.replace(',', '.')));
+  if (n.length !== 2) return null;
+  const [lat, lon] = n;
+  if (!lat || !lon || Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
+  return [Math.round(lat * 1e6) / 1e6, Math.round(lon * 1e6) / 1e6];
+}

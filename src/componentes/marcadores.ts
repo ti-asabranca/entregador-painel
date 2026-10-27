@@ -39,6 +39,16 @@ export function iconeCliente(situacao: SituacaoCliente, ordem: number | null): L
   });
 }
 
+/** Ponto simples na cor informada (constante do código, nunca texto da API). */
+export function iconePonto(cor: string): L.DivIcon {
+  return L.divIcon({
+    className: 'icone-mapa',
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+    html: `<div class="icone-cliente" style="background:${cor}"></div>`,
+  });
+}
+
 export const iconeDeposito = L.divIcon({
   className: 'icone-mapa',
   iconSize: [30, 30],

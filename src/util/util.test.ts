@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatarDistancia, formatarDuracao, formatarPeso, percentualEntregue } from './formatacao';
+import { formatarDistancia, formatarDuracao, formatarPeso, lerCoordenada, percentualEntregue } from './formatacao';
 import { decodificarPolyline } from './polyline';
 import { rotuloMotivo } from './rotulos';
 
@@ -67,5 +67,21 @@ describe('csv', () => {
     expect(celula(null)).toBe('""');
     expect(numeroCsv(-9.6512)).toBe('-9,6512');
     expect(numeroCsv(null)).toBe('');
+  });
+});
+
+describe('lerCoordenada', () => {
+  it('aceita ponto ou vírgula decimal e separadores comuns', () => {
+    expect(lerCoordenada('-10.9472, -37.0731')).toEqual([-10.9472, -37.0731]);
+    expect(lerCoordenada('-10,9472, -37,0731')).toEqual([-10.9472, -37.0731]);
+    expect(lerCoordenada('-10.9472;-37.0731')).toEqual([-10.9472, -37.0731]);
+    expect(lerCoordenada('-10.94712345 -37.0731')).toEqual([-10.947123, -37.0731]);
+  });
+
+  it('rejeita fora da faixa, zero ou quantidade errada de números', () => {
+    expect(lerCoordenada('-91, -37')).toBeNull();
+    expect(lerCoordenada('0, -37')).toBeNull();
+    expect(lerCoordenada('-10.9')).toBeNull();
+    expect(lerCoordenada('')).toBeNull();
   });
 });

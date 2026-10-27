@@ -135,19 +135,37 @@ export interface Fechamento {
   devolucoes_por_motivo: { motivo: string; itens: number; valor: number; peso: number; sem_valor: number }[];
 }
 
+export type OrigemCoordenada = 'SUGERIDA' | 'MANUAL' | 'ENDERECO';
+
 export interface ClienteCoordenada {
   codigo: string;
   loja: string;
   nome: string | null;
   razao_social: string | null;
   endereco: string | null;
+  municipio: string | null;
+  uf: string | null;
+  /** Coordenada vigente: a corrigida pela gerência ou, sem ela, a do ERP. */
   latitude: number | null;
   longitude: number | null;
-  situacao: 'SEM_COORDENADA' | 'SUSPEITA';
+  /** ENTREGADOR = corrigida pela gerência (banco do entregador); ERP = A1_IONLAT/A1_IONLONG. */
+  fonte: 'ENTREGADOR' | 'ERP' | null;
+  latitude_erp: number | null;
+  longitude_erp: number | null;
+  corrigida_origem: OrigemCoordenada | null;
+  corrigida_em: string | null;
+  corrigida_por: string | null;
+  situacao: 'SEM_COORDENADA' | 'SUSPEITA' | 'OK';
   amostras: number;
   latitude_sugerida: number | null;
   longitude_sugerida: number | null;
   distancia_m: number | null;
+}
+
+export interface EnderecoEncontrado {
+  descricao: string;
+  latitude: number;
+  longitude: number;
 }
 
 export interface Coordenadas {

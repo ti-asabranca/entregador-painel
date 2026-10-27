@@ -28,7 +28,7 @@ export function definirAoPerderSessao(fn: (() => void) | null): void {
 }
 
 interface Opcoes {
-  metodo?: 'GET' | 'POST' | 'PUT';
+  metodo?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   corpo?: unknown;
   token?: string | null;
   sinal?: AbortSignal;

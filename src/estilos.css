@@ -404,6 +404,17 @@ a { color: var(--azul); }
 .coordenadas-mapa .fechar { position: absolute; right: 6px; top: 2px; border: 0; background: none; font-size: 1.4rem; cursor: pointer; }
 .coordenadas-layout tbody tr { cursor: pointer; }
 .linha-selecionada td { background: #e8f0fb; }
+.legenda-coordenadas { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 0.8rem; }
+.legenda-coordenadas i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: middle; }
+.coordenadas-detalhe { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; margin: 0; font-size: 0.9rem; }
+.coordenadas-detalhe dt { color: var(--secundario); }
+.coordenadas-detalhe dd { margin: 0; overflow-wrap: anywhere; }
+.coordenadas-form { display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; }
+.coordenadas-form .linha-campo { display: flex; gap: 8px; }
+.coordenadas-form input { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid var(--borda); border-radius: 8px; font-size: 0.95rem; }
+.coordenadas-form .erro-campo { color: var(--vermelho); font-size: 0.8rem; }
+.resultados-endereco { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; }
+.resultados-endereco .botao-link { text-align: left; }
 @media (max-width: 900px) {
   .coordenadas-layout.com-mapa { grid-template-columns: 1fr; }
 }

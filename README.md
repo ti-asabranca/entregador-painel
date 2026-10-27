@@ -17,7 +17,7 @@ React + TypeScript + Vite, mapa OpenStreetMap (Leaflet). Consome a `entregador-a
 | **Fechamento** (`/fechamento`) | Notas para reenvio e itens devolvidos no período, com valor e peso estimados, totais por motivo e exportação CSV (faturamento/logística reversa). |
 | **Linha do tempo** (detalhe do motorista, tela cheia) | Eventos do dia escolhido e **replay** do percurso (reproduzir/arrastar). Card de **término previsto** no detalhe e na lista de entregadores. |
 | **Mapa — camadas** | Clientes pendentes, percursos de hoje (o do motorista selecionado em destaque) e ocorrências do período (concentração em vermelho). |
-| **Cadastros › Coordenadas** (`/cadastro/coordenadas`) | Clientes sem coordenada ou com coordenada suspeita, com sugestão (mediana dos locais de entrega), mapa comparativo e CSV para correção no ERP (A1_IONLAT/A1_IONLONG). |
+| **Cadastros › Coordenadas** (`/cadastro/coordenadas`) | Todos os clientes com a coordenada vigente (corrigida pela gerência ou A1_IONLAT/A1_IONLONG do ERP), situação (sem coordenada, suspeita, OK) e sugestão (mediana dos locais de entrega). Ao selecionar: mapa comparativo, **aceitar a sugerida**, **buscar pelo endereço** (OpenStreetMap), **digitar/colar** ou **marcar no mapa** a coordenada, e **voltar ao ERP**. A correção fica no banco do entregador e tem prioridade sobre a do ERP no aplicativo, nas rotas e no painel. CSV para conferência. |
 | **Usuários** (`/usuarios`, só administrador) | Cadastro dos usuários da gerência: perfil (Administrador/Usuário), empresas com acesso, ativo/inativo, redefinir senha. Senha temporária automática exibida uma vez, com troca obrigatória no primeiro login. |
 
 ## Requisitos

@@ -519,3 +519,10 @@ a { color: var(--azul); }
   .barra-topo nav a, .menu-suspenso > summary { padding: 8px 8px; }
 }
 .barra-topo .menu-suspenso-itens .secundario { color: var(--secundario); }
+
+/* Produtividade */
+.acoes-tabela { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin: 6px 0 8px; }
+.chip-filtro { display: inline-flex; align-items: center; gap: 6px; background: #e8f0fb; border-radius: 16px; padding: 4px 10px; font-size: 0.9rem; }
+.chip-filtro .botao-link { font-size: 1.1rem; line-height: 1; }
+.tabela-clicavel tbody tr { cursor: pointer; }
+.tabela-clicavel tbody tr:hover td { background: #f3f7fc; }

@@ -63,7 +63,7 @@ function BarraTopo() {
   const { pathname } = useLocation();
   const totalAlertas = alertas?.alertas.length ?? 0;
   const suportaNotificacao = typeof Notification !== 'undefined';
-  const gestaoAtiva = ['/indicadores', '/fechamento', '/cadastro', '/usuarios'].some((p) => pathname.startsWith(p));
+  const gestaoAtiva = ['/indicadores', '/fechamento', '/produtividade', '/cadastro', '/usuarios'].some((p) => pathname.startsWith(p));
 
   return (
     <header className="barra-topo">
@@ -89,6 +89,7 @@ function BarraTopo() {
           <span className="menu-grupo">Análises</span>
           <NavLink to="/indicadores">Indicadores</NavLink>
           <NavLink to="/fechamento">Fechamento (reenvios e devoluções)</NavLink>
+          <NavLink to="/produtividade">Produtividade do entregador</NavLink>
           <span className="menu-grupo">Cadastros</span>
           <NavLink to="/cadastro/motoristas">Motoristas</NavLink>
           <NavLink to="/cadastro/coordenadas">Coordenadas dos clientes</NavLink>

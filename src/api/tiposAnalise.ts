@@ -179,3 +179,123 @@ export interface CamadasMapa {
   percursos: { motorista: string; linha: [number, number][] }[];
   ocorrencias: [number, number, string][];
 }
+
+/** Métricas somáveis da produtividade (por carga, por motorista e total). */
+export interface MetricasProdutividade {
+  pontos: number;
+  concluidos: number;
+  /** Clientes ENTREGUE ou PARCIAL. */
+  entregas: number;
+  entregas_dia1: number;
+  entregas_dia2: number;
+  entregas_dia3_mais: number;
+  parciais: number;
+  nao_entregues: number;
+  notas: number;
+  notas_entregues: number;
+  itens: number;
+  quantidade: number;
+  quantidade_entregue: number;
+  peso: number;
+  peso_entregue: number;
+  valor: number;
+  valor_entregue: number;
+  fonte_geocerca: number;
+  fonte_gps: number;
+  sem_comprovacao: number;
+  marcadas_depois: number;
+  tempo_medio_s: number | null;
+  peso_incompleto: boolean;
+}
+
+export interface ProdutividadeTotal extends MetricasProdutividade {
+  viagens: number;
+  cargas: number;
+  km_previsto: number;
+  cargas_sem_km: number;
+  abertas: number;
+}
+
+export interface ProdutividadeMotorista extends ProdutividadeTotal {
+  motorista: string;
+  nome: string | null;
+}
+
+export interface ProdutividadeSintetico {
+  periodo: Periodo;
+  motoristas: ProdutividadeMotorista[];
+  total: ProdutividadeTotal;
+}
+
+export interface ProdutividadeCarga extends MetricasProdutividade {
+  filial: string;
+  carga_codigo: string;
+  seqcar: string;
+  motorista: string;
+  motorista_nome: string | null;
+  data_carga: string;
+  caminhao: string | null;
+  caminhao_placa: string | null;
+  rota_descricao: string | null;
+  peso_carga: number | null;
+  prestacao_contas: string | null;
+  fechada: boolean;
+  viagem_id: string;
+  viagem_saida_em: string;
+  viagem_saida_dia: string;
+  viagem_saida_fonte: 'DEPOSITO' | 'PRIMEIRA_ENTREGA';
+  viagem_retorno_em: string | null;
+  viagem_km_previsto: number | null;
+  viagem_cargas: number;
+  rota_erro: string | null;
+  clientes_sem_coordenada: number | null;
+  km_previsto: number | null;
+  km_pendente: boolean;
+  dias_viagem: number | null;
+}
+
+export interface ProdutividadeCargas {
+  periodo: Periodo;
+  cargas: ProdutividadeCarga[];
+}
+
+export interface ProdutividadeEntrega {
+  filial: string;
+  carga_codigo: string;
+  seqcar: string;
+  motorista: string;
+  motorista_nome: string | null;
+  cliente_codigo: string;
+  cliente_loja: string;
+  cliente_nome: string | null;
+  municipio: string | null;
+  resultado: 'ENTREGUE' | 'PARCIAL' | 'NAO_ENTREGUE';
+  motivo: string | null;
+  modo: 'NOTAS' | 'CLIENTE' | 'VIAGEM';
+  marcada_em: string;
+  efetiva_em: string;
+  fonte: 'GEOCERCA' | 'GPS' | 'MARCACAO';
+  sem_comprovacao: boolean;
+  chegada_em: string | null;
+  saida_em: string | null;
+  permanencia_s: number | null;
+  atraso_marcacao_s: number | null;
+  marcada_depois: boolean;
+  dia_viagem: number;
+  viagem_saida_em: string;
+  notas: number;
+  notas_entregues: number;
+  itens: number;
+  quantidade: number;
+  quantidade_entregue: number;
+  peso: number;
+  peso_entregue: number;
+  valor: number;
+  valor_entregue: number;
+  peso_incompleto: boolean;
+}
+
+export interface ProdutividadeEntregas {
+  periodo: Periodo;
+  entregas: ProdutividadeEntrega[];
+}

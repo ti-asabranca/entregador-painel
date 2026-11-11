@@ -189,6 +189,8 @@ export interface MetricasProdutividade {
   entregas_dia1: number;
   entregas_dia2: number;
   entregas_dia3_mais: number;
+  /** Entregas das cargas sem aplicativo (ERP): sem horário, sem dia da viagem. */
+  entregas_sem_dia: number;
   parciais: number;
   nao_entregues: number;
   notas: number;
@@ -208,11 +210,16 @@ export interface MetricasProdutividade {
   peso_incompleto: boolean;
 }
 
+/** APLICATIVO = conclusões no app; ERP = carga sem uso do app (dados do Protheus e devoluções). */
+export type OrigemProdutividade = 'APLICATIVO' | 'ERP';
+
 export interface ProdutividadeTotal extends MetricasProdutividade {
   viagens: number;
   cargas: number;
   km_previsto: number;
   cargas_sem_km: number;
+  /** Cargas sem uso do aplicativo (dados do ERP; resultado pelas devoluções). */
+  cargas_sem_aplicativo: number;
   abertas: number;
 }
 
@@ -240,10 +247,11 @@ export interface ProdutividadeCarga extends MetricasProdutividade {
   peso_carga: number | null;
   prestacao_contas: string | null;
   fechada: boolean;
+  origem: OrigemProdutividade;
   viagem_id: string;
   viagem_saida_em: string;
   viagem_saida_dia: string;
-  viagem_saida_fonte: 'DEPOSITO' | 'PRIMEIRA_ENTREGA';
+  viagem_saida_fonte: 'DEPOSITO' | 'PRIMEIRA_ENTREGA' | 'CARGA';
   viagem_retorno_em: string | null;
   viagem_km_previsto: number | null;
   viagem_cargas: number;
@@ -271,18 +279,19 @@ export interface ProdutividadeEntrega {
   municipio: string | null;
   resultado: 'ENTREGUE' | 'PARCIAL' | 'NAO_ENTREGUE';
   motivo: string | null;
-  modo: 'NOTAS' | 'CLIENTE' | 'VIAGEM';
-  marcada_em: string;
-  efetiva_em: string;
-  fonte: 'GEOCERCA' | 'GPS' | 'MARCACAO';
+  modo: 'NOTAS' | 'CLIENTE' | 'VIAGEM' | 'ERP';
+  marcada_em: string | null;
+  efetiva_em: string | null;
+  fonte: 'GEOCERCA' | 'GPS' | 'MARCACAO' | 'ERP';
   sem_comprovacao: boolean;
   chegada_em: string | null;
   saida_em: string | null;
   permanencia_s: number | null;
   atraso_marcacao_s: number | null;
   marcada_depois: boolean;
-  dia_viagem: number;
+  dia_viagem: number | null;
   viagem_saida_em: string;
+  origem: OrigemProdutividade;
   notas: number;
   notas_entregues: number;
   itens: number;

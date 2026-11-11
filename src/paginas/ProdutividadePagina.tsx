@@ -9,7 +9,7 @@
  */
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import type {
-  ProdutividadeCarga, ProdutividadeCargas, ProdutividadeEntrega, ProdutividadeEntregas, ProdutividadeMotorista,
+  OrigemProdutividade, ProdutividadeCarga, ProdutividadeCargas, ProdutividadeEntrega, ProdutividadeEntregas, ProdutividadeMotorista,
   ProdutividadeSintetico, ProdutividadeTotal,
 } from '../api/tiposAnalise';
 import { useAuth } from '../auth/AuthContext';
@@ -104,6 +104,7 @@ const diasEntregas = <T extends ProdutividadeTotal | ProdutividadeCarga>(): Colu
   { chave: 'dia1', rotulo: '1º dia', dica: 'Entregas no dia da saída do depósito', valor: (l) => l.entregas_dia1, desc: true },
   { chave: 'dia2', rotulo: '2º dia', valor: (l) => l.entregas_dia2, desc: true },
   { chave: 'dia3', rotulo: '3º+ dia', valor: (l) => l.entregas_dia3_mais, desc: true },
+  { chave: 'semdia', rotulo: 'Sem dia', dica: 'Entregas de cargas sem uso do aplicativo: sem horário, fora do pagamento por dia', valor: (l) => l.entregas_sem_dia, desc: true },
   { chave: 'nao', rotulo: 'Não entregues', valor: (l) => l.nao_entregues, desc: true },
   {
     chave: 'peso', rotulo: 'Peso entregue', dica: 'Σ quantidade entregue × peso bruto (B1_PESBRU), menos devoluções',
@@ -135,35 +136,39 @@ const diasEntregas = <T extends ProdutividadeTotal | ProdutividadeCarga>(): Colu
 // ---------------------------------------------------------------------------------------------------------------
 // Exportação CSV
 
-const CAB_METRICAS = ['Pontos', 'Entregas', 'Entregas 1º dia', 'Entregas 2º dia', 'Entregas 3º+ dia', 'Parciais',
+const CAB_METRICAS = ['Pontos', 'Entregas', 'Entregas 1º dia', 'Entregas 2º dia', 'Entregas 3º+ dia', 'Entregas sem dia', 'Parciais',
   'Não entregues', 'NF', 'NF entregues', 'Itens', 'Quantidade', 'Quantidade entregue', 'Peso (kg)', 'Peso entregue (kg)',
   'Valor (R$)', 'Valor entregue (R$)', 'Tempo médio cliente (min)', 'Geocerca', 'GPS', 'Sem comprovação', 'Marcadas depois',
   'Peso incompleto'];
 const metricasCsv = (l: ProdutividadeTotal | ProdutividadeCarga) => [l.pontos, l.entregas, l.entregas_dia1, l.entregas_dia2,
-  l.entregas_dia3_mais, l.parciais, l.nao_entregues, l.notas, l.notas_entregues, l.itens, numeroCsv(l.quantidade),
+  l.entregas_dia3_mais, l.entregas_sem_dia, l.parciais, l.nao_entregues, l.notas, l.notas_entregues, l.itens, numeroCsv(l.quantidade),
   numeroCsv(l.quantidade_entregue), numeroCsv(l.peso), numeroCsv(l.peso_entregue), numeroCsv(l.valor),
   numeroCsv(l.valor_entregue), minutosCsv(l.tempo_medio_s), l.fonte_geocerca, l.fonte_gps, l.sem_comprovacao,
   l.marcadas_depois, l.peso_incompleto ? 'Sim' : 'Não'];
 
 function exportarMotoristas(d: ProdutividadeSintetico): void {
   baixarCsv(`produtividade-sintetico-${d.periodo.de}-${d.periodo.ate}.csv`,
-    ['Motorista', 'Nome', 'Viagens', 'Cargas', 'Km previsto', 'Cargas sem km', 'Cargas em aberto', ...CAB_METRICAS],
-    d.motoristas.map((m) => [m.motorista, m.nome, m.viagens, m.cargas, numeroCsv(m.km_previsto), m.cargas_sem_km, m.abertas,
+    ['Motorista', 'Nome', 'Viagens', 'Cargas', 'Cargas sem aplicativo', 'Km previsto', 'Cargas sem km', 'Cargas em aberto', ...CAB_METRICAS],
+    d.motoristas.map((m) => [m.motorista, m.nome, m.viagens, m.cargas, m.cargas_sem_aplicativo, numeroCsv(m.km_previsto), m.cargas_sem_km, m.abertas,
       ...metricasCsv(m)]));
 }
 
 function exportarCargas(d: ProdutividadeCargas): void {
   baixarCsv(`produtividade-cargas-${d.periodo.de}-${d.periodo.ate}.csv`,
-    ['Filial', 'Carga', 'Seq.', 'Data carga', 'Motorista', 'Nome', 'Caminhão', 'Placa', 'Rota', 'Saída depósito',
+    ['Filial', 'Carga', 'Seq.', 'Data carga', 'Origem', 'Motorista', 'Nome', 'Caminhão', 'Placa', 'Rota', 'Saída depósito',
       'Fonte da saída', 'Retorno', 'Dias de viagem', 'Km previsto (rateado)', 'Km previsto viagem', 'Cargas na viagem',
       'Peso da carga (DAK)', 'Prestação de contas', 'Situação', ...CAB_METRICAS],
-    d.cargas.map((c) => [c.filial, c.carga_codigo, c.seqcar, c.data_carga, c.motorista, c.motorista_nome, c.caminhao,
-      c.caminhao_placa, c.rota_descricao, c.viagem_saida_em, c.viagem_saida_fonte === 'DEPOSITO' ? 'Geocerca do depósito' : 'Primeira entrega',
+    d.cargas.map((c) => [c.filial, c.carga_codigo, c.seqcar, c.data_carga, ORIGEM[c.origem], c.motorista, c.motorista_nome, c.caminhao,
+      c.caminhao_placa, c.rota_descricao, c.viagem_saida_em, FONTE_SAIDA[c.viagem_saida_fonte],
       c.viagem_retorno_em ?? '', c.dias_viagem, numeroCsv(c.km_previsto), numeroCsv(c.viagem_km_previsto), c.viagem_cargas,
       numeroCsv(c.peso_carga), c.prestacao_contas ?? '', c.fechada ? 'Fechada' : 'Em aberto', ...metricasCsv(c)]));
 }
 
-const FONTE: Record<ProdutividadeEntrega['fonte'], string> = { GEOCERCA: 'Geocerca', GPS: 'GPS', MARCACAO: 'Marcação' };
+const FONTE: Record<ProdutividadeEntrega['fonte'], string> = { GEOCERCA: 'Geocerca', GPS: 'GPS', MARCACAO: 'Marcação', ERP: 'ERP (sem aplicativo)' };
+const ORIGEM: Record<OrigemProdutividade, string> = { APLICATIVO: 'Aplicativo', ERP: 'Sem aplicativo (ERP)' };
+const FONTE_SAIDA: Record<ProdutividadeCarga['viagem_saida_fonte'], string> = {
+  DEPOSITO: 'Geocerca do depósito', PRIMEIRA_ENTREGA: 'Primeira entrega', CARGA: 'Data da carga (sem aplicativo)',
+};
 const RESULTADO: Record<ProdutividadeEntrega['resultado'], { rotulo: string; classe: string }> = {
   ENTREGUE: { rotulo: 'Entregue', classe: 'verde' },
   PARCIAL: { rotulo: 'Parcial', classe: 'amarela' },
@@ -172,13 +177,13 @@ const RESULTADO: Record<ProdutividadeEntrega['resultado'], { rotulo: string; cla
 
 function exportarEntregas(lista: ProdutividadeEntrega[], nome: string): void {
   baixarCsv(nome,
-    ['Filial', 'Carga', 'Seq.', 'Motorista', 'Nome', 'Cliente', 'Loja', 'Nome cliente', 'Município', 'Resultado', 'Motivo',
+    ['Filial', 'Carga', 'Seq.', 'Origem', 'Motorista', 'Nome', 'Cliente', 'Loja', 'Nome cliente', 'Município', 'Resultado', 'Motivo',
       'Saída da viagem', 'Marcada em', 'Efetiva em', 'Fonte', 'Sem comprovação', 'Dia da viagem', 'Chegada', 'Saída',
       'Permanência (min)', 'Atraso marcação (min)', 'NF', 'NF entregues', 'Itens', 'Quantidade', 'Quantidade entregue',
       'Peso (kg)', 'Peso entregue (kg)', 'Valor (R$)', 'Valor entregue (R$)', 'Peso incompleto'],
-    lista.map((e) => [e.filial, e.carga_codigo, e.seqcar, e.motorista, e.motorista_nome, e.cliente_codigo, e.cliente_loja,
+    lista.map((e) => [e.filial, e.carga_codigo, e.seqcar, ORIGEM[e.origem], e.motorista, e.motorista_nome, e.cliente_codigo, e.cliente_loja,
       e.cliente_nome, e.municipio, RESULTADO[e.resultado].rotulo, e.motivo ? rotuloMotivo(e.motivo) : '', e.viagem_saida_em,
-      e.marcada_em, e.efetiva_em, FONTE[e.fonte], e.sem_comprovacao ? 'Sim' : 'Não', e.dia_viagem, e.chegada_em ?? '',
+      e.marcada_em ?? '', e.efetiva_em ?? '', FONTE[e.fonte], e.sem_comprovacao ? 'Sim' : 'Não', e.dia_viagem ?? '', e.chegada_em ?? '',
       e.saida_em ?? '', minutosCsv(e.permanencia_s), minutosCsv(e.atraso_marcacao_s), e.notas, e.notas_entregues, e.itens,
       numeroCsv(e.quantidade), numeroCsv(e.quantidade_entregue), numeroCsv(e.peso), numeroCsv(e.peso_entregue),
       numeroCsv(e.valor), numeroCsv(e.valor_entregue), e.peso_incompleto ? 'Sim' : 'Não']));
@@ -192,6 +197,10 @@ function Resumo({ t }: { t: ProdutividadeTotal }) {
     <section className="cartoes-numeros indicadores-resumo">
       <div className="numero"><span className="rotulo">Km previsto</span><strong>{km(t.km_previsto)}</strong>
         <span className="secundario">{t.viagens} viagens · {t.cargas} cargas{t.cargas_sem_km ? ` · ${t.cargas_sem_km} sem km` : ''}</span></div>
+      {t.cargas_sem_aplicativo > 0 && (
+        <div className="numero"><span className="rotulo">Sem aplicativo</span><strong>{t.cargas_sem_aplicativo} cargas</strong>
+          <span className="secundario">{t.entregas_sem_dia} entregas sem dia · resultado pelas devoluções do ERP</span></div>
+      )}
       <div className="numero"><span className="rotulo">Entregas</span><strong>{inteiro.format(t.entregas)}</strong>
         <span className="secundario">de {inteiro.format(t.pontos)} pontos · {t.nao_entregues} não entregues</span></div>
       <div className="numero"><span className="rotulo">1º dia / 2º dia / 3º+</span>
@@ -213,7 +222,7 @@ function NivelMotoristas({ caminho, aoSelecionar }: { caminho: string; aoSelecio
     { chave: 'nome', rotulo: 'Motorista', valor: (m) => m.nome ?? m.motorista,
       exibir: (m) => <>{m.nome ?? '—'}<div className="secundario">{m.motorista}</div></> },
     { chave: 'viagens', rotulo: 'Viagens', valor: (m) => m.viagens, desc: true,
-      exibir: (m) => <>{m.viagens}<div className="secundario">{m.cargas} cargas</div></> },
+      exibir: (m) => <>{m.viagens}<div className="secundario">{m.cargas} cargas{m.cargas_sem_aplicativo ? ` · ${m.cargas_sem_aplicativo} sem app` : ''}</div></> },
     { chave: 'km', rotulo: 'Km previsto', dica: 'Rota ideal (depósito → clientes → depósito), rateada por carga', valor: (m) => m.km_previsto, desc: true,
       exibir: (m) => <>{km(m.km_previsto)}{m.cargas_sem_km > 0 && <div className="secundario">{m.cargas_sem_km} carga(s) sem km</div>}</> },
     { chave: 'pontos', rotulo: 'Pontos', dica: 'Clientes previstos nas cargas', valor: (m) => m.pontos, desc: true },
@@ -244,12 +253,14 @@ function NivelCargas({ caminho, aoSelecionar }: { caminho: string; aoSelecionar:
     { chave: 'carga', rotulo: 'Carga', valor: (c) => `${c.viagem_saida_em}|${c.carga_codigo}`,
       exibir: (c) => <><strong>{c.carga_codigo}/{c.seqcar}</strong> <span className="secundario">fil. {c.filial}</span>
         <div className="secundario">{data(c.data_carga)}{c.rota_descricao ? ` · ${c.rota_descricao}` : ''}</div>
+        {c.origem === 'ERP' && <span className="etiqueta amarela" title="Carga sem uso do aplicativo: dados do ERP, resultado pelas devoluções, sem dia da viagem">sem aplicativo</span>}{' '}
         {!c.fechada && <span className="etiqueta cinza" title="Ainda pode mudar até alguns dias após a prestação de contas">em aberto</span>}</> },
     { chave: 'motorista', rotulo: 'Motorista', valor: (c) => c.motorista_nome ?? c.motorista,
       exibir: (c) => <>{c.motorista_nome ?? c.motorista}<div className="secundario">{c.caminhao_placa ?? c.caminhao ?? ''}</div></> },
     { chave: 'saida', rotulo: 'Saída / retorno', dica: 'Saída do depósito (dia 1 da viagem) e retorno', valor: (c) => c.viagem_saida_em,
       exibir: (c) => <>{formatarDataHora(c.viagem_saida_em)}
         {c.viagem_saida_fonte === 'PRIMEIRA_ENTREGA' && <span className="etiqueta amarela" title="Sem registro de saída do depósito: considerada a primeira entrega"> 1ª entrega</span>}
+        {c.viagem_saida_fonte === 'CARGA' && <span className="etiqueta cinza" title="Carga sem aplicativo: considerada a data da carga"> data da carga</span>}
         <div className="secundario">{c.viagem_retorno_em ? `retorno ${formatarDataHora(c.viagem_retorno_em)}` : 'sem retorno'}
           {c.dias_viagem ? ` · ${c.dias_viagem} dia(s)` : ''}</div></> },
     { chave: 'km', rotulo: 'Km previsto', dica: 'Km da viagem rateado pelos pontos de entrega de cada carga', valor: (c) => c.km_previsto, desc: true,
@@ -287,11 +298,11 @@ function NivelEntregas({ caminho, titulo }: { caminho: string; titulo: string })
     { chave: 'resultado', rotulo: 'Resultado', valor: (e) => e.resultado,
       exibir: (e) => <><span className={`etiqueta ${RESULTADO[e.resultado].classe}`}>{RESULTADO[e.resultado].rotulo}</span>
         {e.motivo && <div className="secundario">{rotuloMotivo(e.motivo)}</div>}</> },
-    { chave: 'dia', rotulo: 'Dia', dica: 'Dia da viagem pelo horário efetivo (1 = dia da saída do depósito)', valor: (e) => e.dia_viagem,
-      exibir: (e) => `${e.dia_viagem}º` },
+    { chave: 'dia', rotulo: 'Dia', dica: 'Dia da viagem pelo horário efetivo (1 = dia da saída do depósito); sem dia = carga sem aplicativo', valor: (e) => e.dia_viagem,
+      exibir: (e) => (e.dia_viagem === null ? <span className="etiqueta cinza">sem dia</span> : `${e.dia_viagem}º`) },
     { chave: 'efetiva', rotulo: 'Horário efetivo', dica: 'Chegada ao cliente pela geocerca ou GPS; sem evidência, a marcação', valor: (e) => e.efetiva_em,
-      exibir: (e) => <>{formatarDataHora(e.efetiva_em)}{' '}
-        <span className={`etiqueta ${e.sem_comprovacao ? 'amarela' : 'cinza'}`}>{e.sem_comprovacao ? 'sem comprovação' : FONTE[e.fonte]}</span></> },
+      exibir: (e) => (e.fonte === 'ERP' ? <span className="etiqueta cinza" title="Carga sem uso do aplicativo">sem aplicativo</span> : <>{formatarDataHora(e.efetiva_em)}{' '}
+        <span className={`etiqueta ${e.sem_comprovacao ? 'amarela' : 'cinza'}`}>{e.sem_comprovacao ? 'sem comprovação' : FONTE[e.fonte]}</span></>) },
     { chave: 'marcada', rotulo: 'Marcada em', valor: (e) => e.marcada_em,
       exibir: (e) => <>{formatarDataHora(e.marcada_em)}
         {e.marcada_depois && <div className="secundario">marcada {formatarDuracao(e.atraso_marcacao_s)} depois</div>}</> },

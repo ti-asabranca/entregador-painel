@@ -46,6 +46,8 @@ export const TIPO_ALERTA: Record<TipoAlerta, string> = {
 const MOTIVOS: Record<string, string> = {
   // Não entrega do cliente
   DEVOLUCAO_TOTAL: 'Devolução total',
+  // Carga sem aplicativo: nota de entrada de devolução no ERP
+  DEVOLUCAO_ERP: 'Devolução no ERP',
   CLIENTE_FECHADO: 'Cliente fechado',
   ENDERECO_NAO_LOCALIZADO: 'Endereço não localizado',
   REENVIO: 'Reenvio (entrega encerrada)',

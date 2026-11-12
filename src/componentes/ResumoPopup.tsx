@@ -7,7 +7,7 @@
  */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ErroApi, requisitar } from '../api/cliente';
-import type { SituacaoCliente } from '../api/tipos';
+import type { SituacaoCliente, Trecho } from '../api/tipos';
 import { useAuth } from '../auth/AuthContext';
 import { formatarDecorrido, formatarDistancia, formatarDuracao, formatarHora, formatarPeso } from '../util/formatacao';
 import { SITUACAO_CLIENTE, rotuloMotivo } from '../util/rotulos';
@@ -58,6 +58,8 @@ interface ResumoCaminhao {
   ultima_conclusao_em: string | null;
   proximo: (Previsao & { nome: string | null; cliente_codigo: string }) | null;
   aviso: string | null;
+  /** Ausente na API anterior. */
+  trecho?: Trecho | null;
 }
 
 export type AlvoResumo =
@@ -151,7 +153,24 @@ function ConteudoCaminhao({ r, nome }: { r: ResumoCaminhao; nome: string }) {
         {r.proximo && <div className="secundario">Pela melhor rota.{notaPartida(r.proximo)}</div>}
         {!r.proximo && r.aviso && <div className="secundario">{r.aviso}</div>}
       </div>
+      {r.trecho && <BlocoTrecho t={r.trecho} />}
     </>
+  );
+}
+
+/** Deslocamento desde a saída do último cliente: previsto (fixado na saída) × decorrido. */
+function BlocoTrecho({ t }: { t: Trecho }) {
+  return (
+    <div className={`resumo-bloco${t.atrasado ? ' resumo-atrasado' : ''}`}>
+      <Linha rotulo="Trecho" valor={`${t.de.nome ?? t.de.codigo} → ${t.para.nome ?? t.para.codigo}`} />
+      <Linha rotulo="Tempo previsto" valor={`~${formatarDuracao(t.previsto_s)} (${formatarDistancia(t.distancia_m)}), chegada até ${formatarHora(t.chegada_prevista_em)}`} />
+      <Linha rotulo="A caminho há" valor={`${formatarDuracao(t.decorrido_s)}${t.pausa_s > 0 ? ` (sem ${formatarDuracao(t.pausa_s)} de pausa)` : ''}`} />
+      {t.atrasado && <Linha rotulo="Atrasado" valor={`${formatarDuracao(t.atraso_s)} além do previsto`} />}
+      <div className="secundario">
+        Previsto na saída do cliente{t.fonte === 'ESTIMATIVA' ? ' (estimativa em linha reta: serviço de rotas indisponível)' : ''}.
+        Alerta acima de {formatarDuracao(t.limite_s)}.
+      </div>
+    </div>
   );
 }
 

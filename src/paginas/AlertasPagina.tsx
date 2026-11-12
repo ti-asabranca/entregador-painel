@@ -76,7 +76,10 @@ export function AlertasPagina() {
         <p className="secundario limites-alerta">
           Regras: parado fora de cliente sem pausa &gt; {l.paradoMin} min · sem conexão &gt; {l.semSinalMin} min ·
           no cliente &gt; {l.clienteMin} min · {l.foraSequencia}+ clientes pulados na rota ideal · direção contínua
-          &gt; {l.direcaoMin} min sem parada de {l.descansoMin} min (Lei 13.103/2015) · término previsto após {l.horarioLimite}.
+          &gt; {l.direcaoMin} min sem parada de {l.descansoMin} min (Lei 13.103/2015) · término previsto após {l.horarioLimite}
+          {l.trechoFator !== undefined && (
+            <> · a caminho do próximo cliente &gt; previsto × {String(l.trechoFator).replace('.', ',')} + {l.trechoToleranciaMin} min (sem as pausas)</>
+          )}.
         </p>
       )}
     </main>

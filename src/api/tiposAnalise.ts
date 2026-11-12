@@ -53,7 +53,8 @@ export interface Indicadores {
   evolucao: { dia: string; concluidos: number; entregues: number; media_cliente_s: number | null }[];
 }
 
-export type TipoAlerta = 'SEM_SINAL' | 'PARADO' | 'CLIENTE_DEMORADO' | 'FORA_SEQUENCIA' | 'DIRECAO_CONTINUA' | 'ATRASO';
+export type TipoAlerta = 'SEM_SINAL' | 'PARADO' | 'CLIENTE_DEMORADO' | 'FORA_SEQUENCIA' | 'DIRECAO_CONTINUA' | 'ATRASO'
+  | 'TRECHO_ATRASADO';
 
 export interface Alerta {
   chave: string;

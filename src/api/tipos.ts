@@ -147,6 +147,27 @@ export interface Motorista {
   tempo_medio_cliente_s?: number | null;
   /** Previsão de término da viagem (rota restante + tempo médio por cliente pendente). */
   previsao_termino_em?: string | null;
+  /** Deslocamento desde a última saída de cliente até o próximo (null = no cliente, sem saída hoje ou concluído). */
+  trecho?: Trecho | null;
+}
+
+/** Deslocamento até o próximo cliente: tempo previsto fixado na saída do cliente anterior. */
+export interface Trecho {
+  de: { codigo: string; loja: string; nome: string | null };
+  para: { codigo: string; loja: string; nome: string | null };
+  saiu_em: string;
+  distancia_m: number;
+  /** Tempo previsto do trecho (OSRM; ESTIMATIVA = linha reta sem o serviço de rotas). */
+  previsto_s: number;
+  fonte: 'ROTA' | 'ESTIMATIVA';
+  /** Pausas desde a saída (descontadas). */
+  pausa_s: number;
+  decorrido_s: number;
+  /** Limite para o alerta: previsto × fator + tolerância. */
+  limite_s: number;
+  chegada_prevista_em: string;
+  atrasado: boolean;
+  atraso_s: number;
 }
 
 /** Cliente na lista do painel: concluídos primeiro, depois pendentes na ordem da rota. */

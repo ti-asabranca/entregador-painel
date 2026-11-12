@@ -41,6 +41,7 @@ export const TIPO_ALERTA: Record<TipoAlerta, string> = {
   FORA_SEQUENCIA: 'Fora da sequência',
   DIRECAO_CONTINUA: 'Direção contínua',
   ATRASO: 'Atraso previsto',
+  TRECHO_ATRASADO: 'Demora até o próximo cliente',
 };
 
 const MOTIVOS: Record<string, string> = {

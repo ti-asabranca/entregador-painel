@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { CargaResumo, ClienteLista, MotoristaPainel, SituacaoCliente } from '../api/tipos';
-import { formatarDataHora, formatarDecorrido, formatarDistancia, formatarHora } from '../util/formatacao';
+import { formatarDataHora, formatarDecorrido, formatarDistancia, formatarDuracao, formatarHora } from '../util/formatacao';
 import { SITUACAO, SITUACAO_CLIENTE, rotuloMotivo, rotuloRota, veiculosDoMotorista } from '../util/rotulos';
 import { useAuth } from '../auth/AuthContext';
 import { retirarCarga } from './CargasRetiradas';
@@ -56,10 +56,13 @@ function IconeCliente({ food, ...props }: { food?: boolean; cor: string; titulo:
   return food ? <IconeCozinheiro {...props} /> : <IconePessoa {...props} />;
 }
 
-function IconeCaminhao({ cor }: { cor: string }) {
+/** Caminhão atrasado no deslocamento até o próximo cliente. */
+const COR_CAMINHAO_ATRASADO = '#c62828';
+
+function IconeCaminhao({ cor, titulo = 'Caminhão (próximo cliente na sequência à direita)' }: { cor: string; titulo?: string }) {
   return (
-    <svg viewBox="0 0 24 24" width="22" height="22" role="img" aria-label="Posição do caminhão">
-      <title>Caminhão (próximo cliente na sequência à direita)</title>
+    <svg viewBox="0 0 24 24" width="22" height="22" role="img" aria-label={titulo}>
+      <title>{titulo}</title>
       {/* Só o contorno, para destacar dos ícones (preenchidos) dos clientes. */}
       <g fill="none" stroke={cor} strokeWidth="1.7" strokeLinejoin="round" strokeLinecap="round">
         <rect x="2.5" y="6" width="11" height="9" rx="1" />
@@ -201,7 +204,12 @@ function LinhaMotorista({ m: bruto, aoAlterar, aoRetirar, abrirResumo }: {
                     e.stopPropagation();
                     abrirResumo({ tipo: 'caminhao', motorista: m.codigo, motoristaNome: m.nome, x: e.clientX, y: e.clientY });
                   }}>
-                  <IconeCaminhao cor={COR_CAMINHAO} />
+                  {m.trecho?.atrasado ? (
+                    <span className="caminhao-atrasado">
+                      <IconeCaminhao cor={COR_CAMINHAO_ATRASADO}
+                        titulo={`Atrasado: a caminho de ${m.trecho.para.nome ?? m.trecho.para.codigo} há ${formatarDuracao(m.trecho.decorrido_s)} (previsto ${formatarDuracao(m.trecho.previsto_s)})`} />
+                    </span>
+                  ) : <IconeCaminhao cor={COR_CAMINHAO} />}
                 </button>
               )}
               <button type="button" className="icone-botao" aria-label={`Resumo: ${tituloCliente(c, ideal)}`}
@@ -261,6 +269,7 @@ export function ListaEntregas({ motoristas, aoAlterar, aoRetirar }: {
         ))}
         <span><IconeCozinheiro cor={SITUACAO_CLIENTE.PENDENTE.cor} titulo="Cliente food" /> Cliente food (cor = situação)</span>
         <span><span className="icone-pessoa no-cliente"><IconePessoa cor={SITUACAO.ENTREGANDO.cor} titulo="Caminhão no cliente" /></span> Caminhão no cliente (azul piscando)</span>
+        <span><IconeCaminhao cor={COR_CAMINHAO_ATRASADO} titulo="Caminhão atrasado" /> Demorando mais que o previsto até o próximo cliente</span>
         <span>Ícones na ordem da rota ideal: cinza antes de verde/vermelho = cliente pulado. Clique no cliente ou no caminhão para ver o resumo.</span>
         <span>Percentual = clientes concluídos (entregues, parciais ou não entregues) sobre o total.</span>
         <span>* Peso parcial: há itens sem B1_PESBRU.</span>

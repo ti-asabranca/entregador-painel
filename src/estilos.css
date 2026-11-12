@@ -210,6 +210,8 @@ a { color: var(--azul); }
 @media (prefers-reduced-motion: reduce) {
   .icone-pessoa.no-cliente { animation: none; border-radius: 50%; box-shadow: 0 0 0 2px #1565c0; }
 }
+/* Caminhão atrasado até o próximo cliente: vermelho com fundo claro (destaque sem piscar). */
+.caminhao-atrasado { display: inline-flex; border-radius: 6px; background: #ffebee; box-shadow: 0 0 0 1px #c62828; }
 .percentual {
   position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: #43a047; color: #fff;
   font-weight: 700; border-radius: 999px; padding: 3px 10px; font-size: 0.92rem;
@@ -337,6 +339,7 @@ a { color: var(--azul); }
 .resumo-tags .selo { font-size: 0.74rem; padding: 2px 8px; }
 .resumo-motivo { color: var(--vermelho); margin-bottom: 4px; }
 .resumo-bloco { border-top: 1px solid var(--borda); margin-top: 8px; padding-top: 6px; }
+.resumo-bloco.resumo-atrasado strong { color: var(--vermelho); }
 .resumo-linha { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; }
 .resumo-linha span { color: var(--secundario); }
 .resumo-linha strong { text-align: right; font-weight: 600; }

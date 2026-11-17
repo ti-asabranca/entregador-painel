@@ -46,6 +46,9 @@ interface ResumoCliente {
   saiu_em: string | null;
   no_cliente_agora: boolean;
   tempo_no_cliente_s: number | null;
+  /** Ainda no cliente há mais que limite_cliente_min (alerta CLIENTE_DEMORADO). */
+  demorado?: boolean;
+  limite_cliente_min?: number;
   previsao: Previsao | null;
   previsao_aviso: string | null;
 }
@@ -94,6 +97,7 @@ function ConteudoCliente({ r }: { r: ResumoCliente }) {
       <div className="resumo-tags">
         <span className="selo" style={{ backgroundColor: s.cor }}>{s.rotulo}</span>
         {r.no_cliente_agora && <span className="selo" style={{ backgroundColor: '#1565c0' }}>Caminhão no cliente</span>}
+        {r.demorado && <span className="selo" style={{ backgroundColor: '#c62828' }}>Tempo excessivo</span>}
       </div>
       {r.motivo && <div className="resumo-motivo">{rotuloMotivo(r.motivo)}{r.descricao ? ` — ${r.descricao}` : ''}</div>}
       <Linha rotulo="Notas" valor={`${r.notas_entregues} de ${r.notas} entregue(s)`} />
@@ -111,12 +115,15 @@ function ConteudoCliente({ r }: { r: ResumoCliente }) {
       )}
 
       {(atendido || r.no_cliente_agora) && (
-        <div className="resumo-bloco">
+        <div className={`resumo-bloco${r.demorado ? ' resumo-atrasado' : ''}`}>
           <Linha rotulo="Chegou ao cliente" valor={r.chegou_em ? formatarHora(r.chegou_em) : '—'} />
           <Linha rotulo="Começou a entrega" valor={r.iniciou_em ? formatarHora(r.iniciou_em) : '—'} />
           <Linha rotulo="Terminou a entrega" valor={r.terminou_em ? formatarHora(r.terminou_em) : '—'} />
           <Linha rotulo="Saiu do cliente" valor={r.saiu_em ? formatarHora(r.saiu_em) : r.no_cliente_agora ? 'ainda no cliente' : '—'} />
           <Linha rotulo="Tempo no cliente" valor={r.tempo_no_cliente_s !== null ? formatarDuracao(r.tempo_no_cliente_s) : '—'} />
+          {r.demorado && r.limite_cliente_min && (
+            <div className="secundario">Acima do limite de {r.limite_cliente_min} min no cliente (alerta enviado).</div>
+          )}
           {!r.chegou_em && (
             <div className="secundario">Chegada/saída não registradas (app sem rastreamento ou cliente sem coordenadas).</div>
           )}

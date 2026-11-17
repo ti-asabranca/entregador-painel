@@ -131,7 +131,11 @@ export interface Motorista {
   peso_restante_incompleto: boolean;
   posicao: Posicao | null;
   pausa: { motivo: string; descricao: string | null; desde: string } | null;
-  visita: { cliente_codigo: string; cliente_loja: string; cliente_nome: string | null; desde: string } | null;
+  visita: {
+    cliente_codigo: string; cliente_loja: string; cliente_nome: string | null; desde: string;
+    /** No cliente há mais que GESTAO_ALERTA_CLIENTE_MIN (padrão 30 min): alerta CLIENTE_DEMORADO e contorno vermelho. */
+    demorado?: boolean;
+  } | null;
   /** Retorno ao depósito (viagem finalizada no aplicativo); null = em viagem. */
   retornou_em?: string | null;
   ultima_conexao: string | null;

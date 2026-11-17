@@ -129,6 +129,8 @@ function LinhaMotorista({ m: bruto, aoAlterar, aoRetirar, abrirResumo }: {
     ? m.clientes.findIndex((c) => c.codigo === m.visita!.cliente_codigo && c.loja === m.visita!.cliente_loja)
     : -1;
   const posCaminhao = noCliente >= 0 ? -1 : m.clientes.findIndex((c) => c.situacao === 'PENDENTE');
+  // Mais tempo no cliente que o limite do alerta CLIENTE_DEMORADO: contorno vermelho (sem piscar).
+  const demorado = noCliente >= 0 && !!m.visita?.demorado;
   // Viagem finalizada: o aplicativo parou de enviar a posição de propósito (sem alerta de conexão).
   const conexao = m.situacao === 'RETORNOU' ? null : alertaConexao(m.ultima_conexao);
   const abrir = () => navegar(`/motoristas/${m.codigo}`);
@@ -197,7 +199,7 @@ function LinhaMotorista({ m: bruto, aoAlterar, aoRetirar, abrirResumo }: {
         <div className="progresso-fundo" style={{ width: `${pct}%` }} aria-hidden="true" />
         <div className="icones-clientes" title={ORDEM_ROTA[m.ordem_rota]}>
           {m.clientes.map((c, i) => (
-            <span key={`${c.codigo}|${c.loja}`} className={`icone-pessoa${i === noCliente ? ' no-cliente' : ''}`}>
+            <span key={`${c.codigo}|${c.loja}`} className={`icone-pessoa${i === noCliente ? ` no-cliente${demorado ? ' demorado' : ''}` : ''}`}>
               {i === posCaminhao && m.situacao !== 'SEM_SINAL' && m.situacao !== 'RETORNOU' && (
                 <button type="button" className="icone-botao" aria-label={`Resumo do caminhão de ${m.nome}`}
                   onClick={(e) => {
@@ -219,7 +221,9 @@ function LinhaMotorista({ m: bruto, aoAlterar, aoRetirar, abrirResumo }: {
                 }}>
                 <IconeCliente food={c.food}
                   cor={i === noCliente ? SITUACAO.ENTREGANDO.cor : SITUACAO_CLIENTE[c.situacao].cor}
-                  titulo={`${tituloCliente(c, ideal)}${i === noCliente ? ' · Caminhão no cliente' : ''}`} />
+                  titulo={`${tituloCliente(c, ideal)}${i === noCliente
+                    ? ` · Caminhão no cliente ${formatarDecorrido(m.visita!.desde)}${demorado ? ' (tempo excessivo)' : ''}`
+                    : ''}`} />
               </button>
             </span>
           ))}
@@ -269,6 +273,7 @@ export function ListaEntregas({ motoristas, aoAlterar, aoRetirar }: {
         ))}
         <span><IconeCozinheiro cor={SITUACAO_CLIENTE.PENDENTE.cor} titulo="Cliente food" /> Cliente food (cor = situação)</span>
         <span><span className="icone-pessoa no-cliente"><IconePessoa cor={SITUACAO.ENTREGANDO.cor} titulo="Caminhão no cliente" /></span> Caminhão no cliente (azul piscando)</span>
+        <span><span className="icone-pessoa no-cliente demorado"><IconePessoa cor={SITUACAO.ENTREGANDO.cor} titulo="Tempo excessivo no cliente" /></span> Tempo excessivo no cliente (contorno vermelho)</span>
         <span><IconeCaminhao cor={COR_CAMINHAO_ATRASADO} titulo="Caminhão atrasado" /> Demorando mais que o previsto até o próximo cliente</span>
         <span>Ícones na ordem da rota ideal: cinza antes de verde/vermelho = cliente pulado. Clique no cliente ou no caminhão para ver o resumo.</span>
         <span>Percentual = clientes concluídos (entregues, parciais ou não entregues) sobre o total.</span>

@@ -210,6 +210,10 @@ a { color: var(--azul); }
 @media (prefers-reduced-motion: reduce) {
   .icone-pessoa.no-cliente { animation: none; border-radius: 50%; box-shadow: 0 0 0 2px #1565c0; }
 }
+/* Tempo excessivo no cliente (alerta CLIENTE_DEMORADO): contorno vermelho fixo, sem piscar. */
+.icone-pessoa.no-cliente.demorado {
+  animation: none; border-radius: 50%; background: #ffebee; box-shadow: 0 0 0 2px var(--vermelho);
+}
 /* Caminhão atrasado até o próximo cliente: vermelho com fundo claro (destaque sem piscar). */
 .caminhao-atrasado { display: inline-flex; border-radius: 6px; background: #ffebee; box-shadow: 0 0 0 1px #c62828; }
 .percentual {

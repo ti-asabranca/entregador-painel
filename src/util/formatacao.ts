@@ -47,6 +47,13 @@ export function visitaDemorada(desde: string | null | undefined, indicadorApi?: 
   return !!desde && agora - new Date(desde).getTime() > limiteMin * 60000;
 }
 
+const MOEDA = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+/** Valor em reais ("R$ 16.909,44"); ausente → "—". */
+export function formatarMoeda(valor: number | null | undefined): string {
+  return valor === null || valor === undefined ? '—' : MOEDA.format(valor);
+}
+
 /** Percentual (0–100) do peso já entregue. */
 export function percentualEntregue(total: number | null, restante: number | null): number | null {
   if (!total || total <= 0 || restante === null) return null;

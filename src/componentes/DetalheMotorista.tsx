@@ -10,7 +10,7 @@ import type { DetalheMotorista as Detalhe } from '../api/tipos';
 import { useAuth } from '../auth/AuthContext';
 import { useConsulta } from '../hooks/useConsulta';
 import {
-  formatarDecorrido, formatarDistancia, formatarDuracao, formatarHora, formatarPeso, percentualEntregue,
+  formatarDecorrido, formatarDistancia, formatarDuracao, formatarHora, formatarMoeda, formatarPeso, percentualEntregue,
 } from '../util/formatacao';
 import { decodificarPolyline } from '../util/polyline';
 import { SITUACAO_CLIENTE, rotuloMotivo, rotuloRota, veiculosDoMotorista } from '../util/rotulos';
@@ -91,6 +91,11 @@ export function DetalheMotorista({ codigo, compacto = false }: { codigo: string;
           {d.peso_restante_incompleto && (
             <span className="alerta-pequeno" title="Há notas pendentes sem itens ou sem B1_PESBRU cadastrado">
               parcial
+            </span>
+          )}
+          {d.valor_restante !== undefined && (
+            <span className="secundario" title="Valor das notas não entregues (itens D2_TOTAL ou, sem itens, F2_VALMERC)">
+              {formatarMoeda(d.valor_restante)}{d.valor_restante_incompleto ? '*' : ''}
             </span>
           )}
         </div>

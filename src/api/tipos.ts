@@ -129,6 +129,9 @@ export interface Motorista {
   peso_total: number | null;
   peso_restante: number;
   peso_restante_incompleto: boolean;
+  /** Valor das notas não entregues (D2_TOTAL ou F2_VALMERC). Ausente em versões anteriores da API. */
+  valor_restante?: number;
+  valor_restante_incompleto?: boolean;
   posicao: Posicao | null;
   pausa: { motivo: string; descricao: string | null; desde: string } | null;
   visita: {

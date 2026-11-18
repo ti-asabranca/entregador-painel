@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatarDistancia, formatarDuracao, formatarPeso, lerCoordenada, percentualEntregue } from './formatacao';
+import { formatarDistancia, formatarDuracao, formatarPeso, lerCoordenada, percentualEntregue, visitaDemorada } from './formatacao';
 import { decodificarPolyline } from './polyline';
 import { rotuloMotivo } from './rotulos';
 
@@ -83,5 +83,19 @@ describe('lerCoordenada', () => {
     expect(lerCoordenada('0, -37')).toBeNull();
     expect(lerCoordenada('-10.9')).toBeNull();
     expect(lerCoordenada('')).toBeNull();
+  });
+});
+
+describe('visitaDemorada', () => {
+  const agora = Date.UTC(2026, 10, 18, 13, 0);
+  const min = (m: number) => new Date(agora - m * 60000).toISOString();
+  it('sem o indicador da API: calcula pelo limite padrão de 30 min', () => {
+    expect(visitaDemorada(min(29), undefined, undefined, agora)).toBe(false);
+    expect(visitaDemorada(min(31), undefined, undefined, agora)).toBe(true);
+    expect(visitaDemorada(null, undefined, undefined, agora)).toBe(false);
+  });
+  it('com o indicador da API: prevalece', () => {
+    expect(visitaDemorada(min(31), false, 30, agora)).toBe(false);
+    expect(visitaDemorada(min(5), true, 30, agora)).toBe(true);
   });
 });

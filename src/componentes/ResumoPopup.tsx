@@ -9,7 +9,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ErroApi, requisitar } from '../api/cliente';
 import type { SituacaoCliente, Trecho } from '../api/tipos';
 import { useAuth } from '../auth/AuthContext';
-import { formatarDecorrido, formatarDistancia, formatarDuracao, formatarHora, formatarPeso } from '../util/formatacao';
+import { LIMITE_CLIENTE_MIN, formatarDecorrido, formatarDistancia, formatarDuracao, formatarHora, formatarPeso, visitaDemorada } from '../util/formatacao';
 import { SITUACAO_CLIENTE, rotuloMotivo } from '../util/rotulos';
 
 const MOEDA = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -89,6 +89,9 @@ function Linha({ rotulo, valor }: { rotulo: string; valor: string }) {
 function ConteudoCliente({ r }: { r: ResumoCliente }) {
   const s = SITUACAO_CLIENTE[r.situacao];
   const atendido = r.situacao !== 'PENDENTE';
+  // Ainda no cliente acima do limite (indicador da API; na API anterior, calculado aqui pela chegada).
+  const limite = r.limite_cliente_min ?? LIMITE_CLIENTE_MIN;
+  const demorado = r.no_cliente_agora && !r.saiu_em && visitaDemorada(r.chegou_em, r.demorado, limite);
   return (
     <>
       <h3>{r.nome ?? `${r.codigo}/${r.loja}`}</h3>
@@ -97,7 +100,7 @@ function ConteudoCliente({ r }: { r: ResumoCliente }) {
       <div className="resumo-tags">
         <span className="selo" style={{ backgroundColor: s.cor }}>{s.rotulo}</span>
         {r.no_cliente_agora && <span className="selo" style={{ backgroundColor: '#1565c0' }}>Caminhão no cliente</span>}
-        {r.demorado && <span className="selo" style={{ backgroundColor: '#c62828' }}>Tempo excessivo</span>}
+        {demorado && <span className="selo" style={{ backgroundColor: '#c62828' }}>Tempo excessivo</span>}
       </div>
       {r.motivo && <div className="resumo-motivo">{rotuloMotivo(r.motivo)}{r.descricao ? ` — ${r.descricao}` : ''}</div>}
       <Linha rotulo="Notas" valor={`${r.notas_entregues} de ${r.notas} entregue(s)`} />
@@ -115,14 +118,14 @@ function ConteudoCliente({ r }: { r: ResumoCliente }) {
       )}
 
       {(atendido || r.no_cliente_agora) && (
-        <div className={`resumo-bloco${r.demorado ? ' resumo-atrasado' : ''}`}>
+        <div className={`resumo-bloco${demorado ? ' resumo-atrasado' : ''}`}>
           <Linha rotulo="Chegou ao cliente" valor={r.chegou_em ? formatarHora(r.chegou_em) : '—'} />
           <Linha rotulo="Começou a entrega" valor={r.iniciou_em ? formatarHora(r.iniciou_em) : '—'} />
           <Linha rotulo="Terminou a entrega" valor={r.terminou_em ? formatarHora(r.terminou_em) : '—'} />
           <Linha rotulo="Saiu do cliente" valor={r.saiu_em ? formatarHora(r.saiu_em) : r.no_cliente_agora ? 'ainda no cliente' : '—'} />
           <Linha rotulo="Tempo no cliente" valor={r.tempo_no_cliente_s !== null ? formatarDuracao(r.tempo_no_cliente_s) : '—'} />
-          {r.demorado && r.limite_cliente_min && (
-            <div className="secundario">Acima do limite de {r.limite_cliente_min} min no cliente (alerta enviado).</div>
+          {demorado && (
+            <div className="secundario">Acima do limite de {limite} min no cliente{r.demorado !== undefined ? ' (alerta enviado)' : ''}.</div>
           )}
           {!r.chegou_em && (
             <div className="secundario">Chegada/saída não registradas (app sem rastreamento ou cliente sem coordenadas).</div>

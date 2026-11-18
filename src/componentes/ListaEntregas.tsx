@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { CargaResumo, ClienteLista, MotoristaPainel, SituacaoCliente } from '../api/tipos';
-import { formatarDataHora, formatarDecorrido, formatarDistancia, formatarDuracao, formatarHora } from '../util/formatacao';
+import { formatarDataHora, formatarDecorrido, formatarDistancia, formatarDuracao, formatarHora, visitaDemorada } from '../util/formatacao';
 import { SITUACAO, SITUACAO_CLIENTE, rotuloMotivo, rotuloRota, veiculosDoMotorista } from '../util/rotulos';
 import { useAuth } from '../auth/AuthContext';
 import { retirarCarga } from './CargasRetiradas';
@@ -130,7 +130,7 @@ function LinhaMotorista({ m: bruto, aoAlterar, aoRetirar, abrirResumo }: {
     : -1;
   const posCaminhao = noCliente >= 0 ? -1 : m.clientes.findIndex((c) => c.situacao === 'PENDENTE');
   // Mais tempo no cliente que o limite do alerta CLIENTE_DEMORADO: contorno vermelho (sem piscar).
-  const demorado = noCliente >= 0 && !!m.visita?.demorado;
+  const demorado = noCliente >= 0 && visitaDemorada(m.visita?.desde, m.visita?.demorado);
   // Viagem finalizada: o aplicativo parou de enviar a posição de propósito (sem alerta de conexão).
   const conexao = m.situacao === 'RETORNOU' ? null : alertaConexao(m.ultima_conexao);
   const abrir = () => navegar(`/motoristas/${m.codigo}`);

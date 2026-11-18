@@ -35,6 +35,18 @@ export function formatarDecorrido(iso: string | null | undefined, agora = Date.n
   return `há ${formatarDuracao(s)}`;
 }
 
+/** Limite padrão de tempo no cliente (min), o mesmo do alerta CLIENTE_DEMORADO da API (GESTAO_ALERTA_CLIENTE_MIN). */
+export const LIMITE_CLIENTE_MIN = 30;
+
+/**
+ * Visita aberta desde `desde` passou do limite? Usa o indicador da API quando vier; senão calcula aqui
+ * (API anterior sem o campo `demorado`).
+ */
+export function visitaDemorada(desde: string | null | undefined, indicadorApi?: boolean, limiteMin = LIMITE_CLIENTE_MIN, agora = Date.now()): boolean {
+  if (indicadorApi !== undefined) return indicadorApi;
+  return !!desde && agora - new Date(desde).getTime() > limiteMin * 60000;
+}
+
 /** Percentual (0–100) do peso já entregue. */
 export function percentualEntregue(total: number | null, restante: number | null): number | null {
   if (!total || total <= 0 || restante === null) return null;
